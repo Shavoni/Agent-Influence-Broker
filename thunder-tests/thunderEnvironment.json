@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "env-local",
+    "name": "Local Development",
+    "default": true,
+    "data": [
+      {
+        "name": "baseUrl",
+        "value": "http://localhost:8000"
+      },
+      {
+        "name": "apiKey",
+        "value": "dev-key-12345"
+      }
+    ]
+  },
+  {
+    "_id": "env-prod",
+    "name": "Production",
+    "default": false,
+    "data": [
+      {
+        "name": "baseUrl",
+        "value": "https://api.agentbroker.com"
+      },
+      {
+        "name": "apiKey",
+        "value": "{{PROD_API_KEY}}"
+      }
+    ]
+  }
+]

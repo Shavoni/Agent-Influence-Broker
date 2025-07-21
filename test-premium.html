@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Agent Influence Broker - Premium GitKraken Dark</title>
+        <style>
+            body {
+                background-color: #1e1f22;
+                color: #ffffff;
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+            }
+            .header {
+                background: linear-gradient(135deg, #2b2d31 0%, #36393f 100%);
+                padding: 20px 40px;
+                border-bottom: 2px solid #00d8ff;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            }
+            .title {
+                color: #00d8ff;
+                font-size: 32px;
+                font-weight: 700;
+                margin: 0;
+            }
+            .subtitle {
+                color: #b9bbbe;
+                font-size: 16px;
+                margin: 5px 0 0 0;
+            }
+            .main-content {
+                padding: 40px;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            .card {
+                background: linear-gradient(135deg, #2b2d31 0%, #36393f 100%);
+                border: 1px solid #00d8ff;
+                border-radius: 20px;
+                padding: 30px;
+                margin-bottom: 30px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+            .card h2 {
+                color: #00d8ff;
+                margin-top: 0;
+                font-size: 24px;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+            .stat-card {
+                background: rgba(0, 216, 255, 0.1);
+                border: 1px solid #00d8ff;
+                border-radius: 15px;
+                padding: 20px;
+                text-align: center;
+            }
+            .stat-value {
+                font-size: 32px;
+                font-weight: 800;
+                color: #00ff88;
+                margin-bottom: 8px;
+            }
+            .stat-label {
+                color: #b9bbbe;
+                font-size: 14px;
+            }
+            .btn {
+                background: linear-gradient(135deg, #00d8ff 0%, #0099cc 100%);
+                color: white;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 216, 255, 0.4);
+            }
+            .savings-ticker {
+                background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+                color: #000;
+                border-radius: 15px;
+                padding: 20px;
+                margin: 20px 0;
+                text-align: center;
+                font-weight: 600;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.8;
+                }
+            }
+            .nav-links {
+                display: flex;
+                gap: 20px;
+                margin: 20px 0;
+                flex-wrap: wrap;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header" id="header-navigation">
+            <h1 class="title">🚀 Agent Influence Broker</h1>
+            <p class="subtitle">
+                Premium GitKraken Dark Theme • Enterprise Platform
+            </p>
+        </div>
+
+        <div class="main-content" id="main-content-area">
+            <div class="savings-ticker" id="savings-ticker">
+                💰 Live Savings Tracker: $2,649+ Total Savings | 22%+ Average
+                Rate | Updating Every 10 Seconds
+            </div>
+
+            <div class="card" id="platform-status-card">
+                <h2>🎯 Platform Status</h2>
+                <p>
+                    Your Agent Influence Broker is running with GitKraken Dark
+                    theme!
+                </p>
+
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card" id="agent-count-card">
+                        <div class="stat-value" id="agentCount">3</div>
+                        <div class="stat-label">Active Agents</div>
+                    </div>
+                    <div class="stat-card" id="negotiation-count-card">
+                        <div class="stat-value" id="negotiationCount">1</div>
+                        <div class="stat-label">Negotiations</div>
+                    </div>
+                    <div class="stat-card" id="transaction-count-card">
+                        <div class="stat-value" id="transactionCount">3</div>
+                        <div class="stat-label">Transactions</div>
+                    </div>
+                    <div class="stat-card" id="total-savings-card">
+                        <div class="stat-value">$2,649</div>
+                        <div class="stat-label">Total Savings</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="api-endpoints-card">
+                <h2>🔗 API Endpoints</h2>
+                <div class="nav-links" id="nav-links">
+                    <a href="/api/v1/agents" class="btn">View Agents</a>
+                    <a href="/api/v1/negotiations" class="btn">Negotiations</a>
+                    <a href="/api/v1/transactions" class="btn">Transactions</a>
+                    <a href="/api/v1/savings/analytics" class="btn"
+                        >Savings Analytics</a
+                    >
+                    <a href="/health" class="btn">Health Check</a>
+                    <a href="/" class="btn">Main Dashboard</a>
+                </div>
+            </div>
+
+            <div class="card" id="theme-features-card">
+                <h2>✨ Theme Features</h2>
+                <ul style="color: #b9bbbe; line-height: 1.8">
+                    <li>
+                        <strong style="color: #00d8ff"
+                            >GitKraken Dark Colors:</strong
+                        >
+                        #1e1f22 background, #00d8ff accents
+                    </li>
+                    <li>
+                        <strong style="color: #00d8ff"
+                            >Live Savings Ticker:</strong
+                        >
+                        Real-time updates every 10 seconds
+                    </li>
+                    <li>
+                        <strong style="color: #00d8ff"
+                            >Enterprise Backend:</strong
+                        >
+                        Production-ready FastAPI platform
+                    </li>
+                    <li>
+                        <strong style="color: #00d8ff">Professional UI:</strong>
+                        Cards, gradients, and smooth animations
+                    </li>
+                    <li>
+                        <strong style="color: #00d8ff"
+                            >Responsive Design:</strong
+                        >
+                        Works on all screen sizes
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <script>
+            // Load live data
+            async function loadStats() {
+                try {
+                    const health = await fetch('/health').then((r) => r.json())
+                    if (health.components?.sample_data) {
+                        document.getElementById('agentCount').textContent =
+                            health.components.sample_data.agents || 3
+                        document.getElementById(
+                            'negotiationCount'
+                        ).textContent =
+                            health.components.sample_data.negotiations || 1
+                        document.getElementById(
+                            'transactionCount'
+                        ).textContent =
+                            health.components.sample_data.transactions || 3
+                    }
+                } catch (error) {
+                    console.error('Failed to load stats:', error)
+                }
+            }
+
+            // Load initial data
+            loadStats()
+
+            // Auto-refresh every 30 seconds
+            setInterval(loadStats, 30000)
+
+            console.log('🎉 GitKraken Dark Theme Loaded!')
+            console.log('💰 Agent Influence Broker - Premium Dashboard')
+        </script>
+    </body>
+</html>

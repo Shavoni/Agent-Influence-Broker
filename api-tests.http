@@ -1,0 +1,89 @@
+### Agent Influence Broker API Tests
+### This file works with REST Client extension for professional API testing
+
+# Start the server first with: uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
+
+### Health Check
+GET http://localhost:8000/health
+
+### Get Dashboard
+GET http://localhost:8000/
+
+### Create Agent
+POST http://localhost:8000/agents
+Content-Type: application/json
+
+{
+    "name": "NegotiatorBot",
+    "agent_type": "negotiator",
+    "capabilities": ["contract_analysis", "price_optimization"],
+    "contact_info": "negotiator@aibroker.com",
+    "reputation_score": 85.5
+}
+
+### Get All Agents
+GET http://localhost:8000/agents
+
+### Get Specific Agent
+GET http://localhost:8000/agents/1
+
+### Create Negotiation
+POST http://localhost:8000/negotiations
+Content-Type: application/json
+
+{
+    "initiator_id": 1,
+    "target_id": 2,
+    "topic": "AI Model Licensing Deal",
+    "initial_offer": {
+        "price": 50000,
+        "terms": "6-month exclusive license"
+    }
+}
+
+### Get All Negotiations
+GET http://localhost:8000/negotiations
+
+### Update Negotiation Status
+PUT http://localhost:8000/negotiations/1
+Content-Type: application/json
+
+{
+    "status": "active",
+    "current_offer": {
+        "price": 45000,
+        "terms": "4-month exclusive license with renewal option"
+    }
+}
+
+### Create Transaction
+POST http://localhost:8000/transactions
+Content-Type: application/json
+
+{
+    "buyer_id": 1,
+    "seller_id": 2,
+    "negotiation_id": 1,
+    "amount": 45000.00,
+    "transaction_type": "licensing",
+    "terms": {
+        "license_duration": "4 months",
+        "exclusive": true,
+        "renewal_option": true
+    }
+}
+
+### Get All Transactions
+GET http://localhost:8000/transactions
+
+### Get Agent Statistics
+GET http://localhost:8000/agents/1/stats
+
+### Search Agents by Capability
+GET http://localhost:8000/agents?capability=negotiation
+
+### Get Negotiations by Status
+GET http://localhost:8000/negotiations?status=active
+
+### Advanced Analytics Test
+GET http://localhost:8000/agents/analytics

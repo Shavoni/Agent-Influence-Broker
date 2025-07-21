@@ -1,0 +1,52 @@
+# Agent Influence Broker - Core Dependencies
+# Following FastAPI best practices and project architecture
+
+# FastAPI and ASGI server - core framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Data validation and settings management
+pydantic>=2.5.0,<3.0.0
+pydantic-settings==2.0.3
+
+# Environment configuration
+python-dotenv==1.0.0
+
+# Authentication and security
+python-jose==3.3.0
+cryptography==41.0.7
+python-multipart==0.0.6
+passlib==1.7.4
+bcrypt==4.1.1
+
+# Database integration
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+
+# Supabase integration
+supabase>=2.0.0
+
+# HTTP client for external APIs
+httpx==0.25.2
+
+# Additional FastAPI dependencies
+jinja2==3.1.2
+python-dateutil==2.8.2
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Code quality and formatting
+black==23.11.0
+isort==5.12.0
+mypy==1.7.1
+pre-commit==3.5.0
+
+# Production server enhancements
+gunicorn==21.2.0
+
+# Additional utility packages
+requests>=2.31.0

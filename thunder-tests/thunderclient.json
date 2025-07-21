@@ -1,0 +1,157 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Agent Influence Broker API",
+  "dateExported": "2025-07-19T10:00:00.000Z",
+  "version": "1.1",
+  "folders": [
+    {
+      "_id": "health-checks",
+      "name": "Health Checks",
+      "containerId": "",
+      "created": "2025-07-19T10:00:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "_id": "agent-management",
+      "name": "Agent Management",
+      "containerId": "",
+      "created": "2025-07-19T10:00:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "_id": "negotiations",
+      "name": "Negotiations",
+      "containerId": "",
+      "created": "2025-07-19T10:00:00.000Z",
+      "sortNum": 30000
+    },
+    {
+      "_id": "transactions",
+      "name": "Transactions",
+      "containerId": "",
+      "created": "2025-07-19T10:00:00.000Z",
+      "sortNum": 40000
+    }
+  ],
+  "requests": [
+    {
+      "_id": "health-check",
+      "colId": "agent-influence-broker",
+      "containerId": "health-checks",
+      "name": "System Health Check",
+      "url": "{{baseUrl}}/health",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2025-07-19T10:00:00.000Z",
+      "modified": "2025-07-19T10:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "200"
+        },
+        {
+          "type": "json-query",
+          "custom": "json.status",
+          "action": "equal",
+          "value": "healthy"
+        }
+      ]
+    },
+    {
+      "_id": "create-agent",
+      "colId": "agent-influence-broker",
+      "containerId": "agent-management",
+      "name": "Create New Agent",
+      "url": "{{baseUrl}}/agents",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2025-07-19T10:00:00.000Z",
+      "modified": "2025-07-19T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"EliteNegotiator\",\n  \"agent_type\": \"negotiator\",\n  \"capabilities\": [\"contract_analysis\", \"price_optimization\", \"risk_assessment\"],\n  \"contact_info\": \"elite@aibroker.com\",\n  \"reputation_score\": 92.5\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "201"
+        },
+        {
+          "type": "json-query",
+          "custom": "json.message",
+          "action": "contains",
+          "value": "created successfully"
+        }
+      ]
+    },
+    {
+      "_id": "get-agents",
+      "colId": "agent-influence-broker",
+      "containerId": "agent-management",
+      "name": "Get All Agents",
+      "url": "{{baseUrl}}/agents",
+      "method": "GET",
+      "sortNum": 20100,
+      "created": "2025-07-19T10:00:00.000Z",
+      "modified": "2025-07-19T10:00:00.000Z",
+      "headers": [],
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "200"
+        },
+        {
+          "type": "json-query",
+          "custom": "json.length",
+          "action": "greater-than",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "_id": "create-negotiation",
+      "colId": "agent-influence-broker",
+      "containerId": "negotiations",
+      "name": "Start New Negotiation",
+      "url": "{{baseUrl}}/negotiations",
+      "method": "POST",
+      "sortNum": 30000,
+      "created": "2025-07-19T10:00:00.000Z",
+      "modified": "2025-07-19T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"initiator_id\": 1,\n  \"target_id\": 2,\n  \"topic\": \"Enterprise AI Integration Contract\",\n  \"initial_offer\": {\n    \"price\": 250000,\n    \"terms\": \"12-month enterprise license with premium support\"\n  }\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "201"
+        }
+      ]
+    }
+  ]
+}

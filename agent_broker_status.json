@@ -1,0 +1,22 @@
+{
+  "core_components": {
+    "config": "\u2705 Working",
+    "logging": "\u2705 Working",
+    "log_level_fix": "\u2705 Fixed"
+  },
+  "dependencies": {
+    "fastapi": "\u2705 0.104.1",
+    "uvicorn": "\u2705 0.24.0",
+    "sqlalchemy": "\u2705 2.0.41",
+    "aiosqlite": "\u2705 0.21.0",
+    "jose": "\u2705 Available",
+    "passlib": "\u2705 Available",
+    "cryptography": "\u2705 Available"
+  },
+  "architecture": {
+    "structure_complete": true,
+    "main_app": "\u2705 Available"
+  },
+  "next_steps": [],
+  "overall_health": "excellent"
+}

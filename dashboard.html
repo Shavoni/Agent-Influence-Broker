@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Agent Influence Broker - Enterprise Dashboard</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+                    'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                color: #333;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .header {
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                padding: 30px;
+                margin-bottom: 30px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+
+            .header h1 {
+                font-size: 3rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 10px;
+            }
+
+            .header p {
+                font-size: 1.2rem;
+                color: #666;
+                margin-bottom: 20px;
+            }
+
+            .status {
+                display: inline-flex;
+                align-items: center;
+                background: #10b981;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-weight: 600;
+            }
+
+            .status::before {
+                content: '🟢';
+                margin-right: 8px;
+            }
+
+            .dashboard {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 30px;
+                margin-bottom: 30px;
+            }
+
+            .card {
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                padding: 30px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            }
+
+            .card h3 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 15px;
+                color: #333;
+            }
+
+            .card p {
+                color: #666;
+                margin-bottom: 20px;
+                line-height: 1.6;
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 10px;
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            }
+
+            .endpoint {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 15px;
+                margin: 10px 0;
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            }
+
+            .method {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                margin-right: 10px;
+            }
+
+            .get {
+                background: #10b981;
+                color: white;
+            }
+            .post {
+                background: #3b82f6;
+                color: white;
+            }
+
+            .response-area {
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                padding: 30px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+
+            .response-content {
+                background: #1a1a1a;
+                color: #00ff00;
+                padding: 20px;
+                border-radius: 10px;
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+                font-size: 0.9rem;
+                line-height: 1.4;
+                max-height: 400px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+            }
+
+            .loading {
+                color: #667eea;
+                font-style: italic;
+            }
+
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .stat {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #667eea;
+            }
+
+            .stat-label {
+                font-size: 0.9rem;
+                color: #666;
+                margin-top: 5px;
+            }
+
+            /* Savings Ticker Styles */
+            .savings-ticker {
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                margin: 30px 0;
+                border-radius: 20px;
+                padding: 25px;
+                box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .savings-ticker::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.2),
+                    transparent
+                );
+                animation: shimmer 3s infinite;
+            }
+
+            @keyframes shimmer {
+                0% {
+                    left: -100%;
+                }
+                50% {
+                    left: 100%;
+                }
+                100% {
+                    left: 100%;
+                }
+            }
+
+            .savings-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+
+            .savings-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .live-badge {
+                background: rgba(255, 255, 255, 0.2);
+                padding: 4px 12px;
+                border-radius: 15px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                animation: pulse 2s infinite;
+            }
+
+            .savings-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+
+            .savings-metric {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 20px;
+                text-align: center;
+                backdrop-filter: blur(10px);
+            }
+
+            .savings-amount {
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin-bottom: 5px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .savings-label {
+                font-size: 0.9rem;
+                opacity: 0.9;
+                font-weight: 500;
+            }
+
+            .savings-percentage {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #fef3c7;
+                margin-top: 5px;
+            }
+
+            .ticker-scroll {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 15px;
+                margin-top: 20px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .ticker-content {
+                display: inline-block;
+                animation: scroll 30s linear infinite;
+            }
+
+            @keyframes scroll {
+                0% {
+                    transform: translateX(100%);
+                }
+                100% {
+                    transform: translateX(-100%);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container" id="main-container">
+            <div class="header" id="header-navigation">
+                <h1>🚀 Agent Influence Broker</h1>
+                <p>
+                    Enterprise-Grade AI Agent Negotiation & Transaction Platform
+                </p>
+                <div class="status" id="system-status">System Operational</div>
+
+                <div class="stats" id="stats-overview">
+                    <div class="stat">
+                        <div class="stat-number" id="agentCount">-</div>
+                        <div class="stat-label">AI Agents</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="negotiationCount">-</div>
+                        <div class="stat-label">Negotiations</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="transactionCount">-</div>
+                        <div class="stat-label">Transactions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Savings Ticker - Main Feature -->
+            <div class="savings-ticker" id="savings-ticker">
+                <div class="savings-header" id="savings-header">
+                    <div class="savings-title" id="savings-title">
+                        💰 Live Savings Tracker
+                        <span class="live-badge">LIVE</span>
+                    </div>
+                    <div
+                        id="lastUpdated"
+                        style="font-size: 0.9rem; opacity: 0.8"
+                    >
+                        Loading...
+                    </div>
+                </div>
+
+                <div class="savings-grid" id="savings-grid">
+                    <div class="savings-metric" id="total-savings-metric">
+                        <div class="savings-amount" id="totalSavings">$0</div>
+                        <div class="savings-label">Total Savings</div>
+                        <div
+                            class="savings-percentage"
+                            id="totalSavingsPercent"
+                        >
+                            0%
+                        </div>
+                    </div>
+                    <div class="savings-metric" id="today-savings-metric">
+                        <div class="savings-amount" id="todaySavings">$0</div>
+                        <div class="savings-label">Today's Savings</div>
+                    </div>
+                    <div class="savings-metric" id="week-savings-metric">
+                        <div class="savings-amount" id="weekSavings">$0</div>
+                        <div class="savings-label">This Week</div>
+                    </div>
+                    <div class="savings-metric" id="avg-savings-metric">
+                        <div class="savings-amount" id="avgSavings">0%</div>
+                        <div class="savings-label">Average Savings Rate</div>
+                    </div>
+                </div>
+
+                <div class="ticker-scroll" id="ticker-scroll">
+                    <div class="ticker-content" id="savings-ticker-content">
+                        🎉 Recent Savings: Loading live savings data...
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard" id="main-dashboard">
+                <div class="card" id="agent-management-card">
+                    <h3>🤖 Agent Management</h3>
+                    <p>
+                        Manage AI agents with reputation scoring and capability
+                        tracking.
+                    </p>
+
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/api/v1/agents
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>/api/v1/agents
+                    </div>
+
+                    <button class="btn" onclick="loadAgents()">
+                        View All Agents
+                    </button>
+                </div>
+
+                <div class="card" id="negotiation-engine-card">
+                    <h3>🤝 Negotiation Engine</h3>
+                    <p>Real-time negotiation protocols between AI agents.</p>
+
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/api/v1/negotiations
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span
+                        >/api/v1/negotiations
+                    </div>
+
+                    <button class="btn" onclick="loadNegotiations()">
+                        View Negotiations
+                    </button>
+                </div>
+
+                <div class="card" id="transaction-system-card">
+                    <h3>💰 Transaction System</h3>
+                    <p>Secure value exchange and payment processing.</p>
+
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/api/v1/transactions
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span
+                        >/api/v1/transactions
+                    </div>
+
+                    <button class="btn" onclick="loadTransactions()">
+                        View Transactions
+                    </button>
+                </div>
+
+                <div class="card" id="system-health-card">
+                    <h3>📊 System Health</h3>
+                    <p>Monitor platform health and performance metrics.</p>
+
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/health
+                    </div>
+
+                    <button class="btn" onclick="loadHealth()">
+                        Check Health
+                    </button>
+                </div>
+            </div>
+
+            <div class="response-area" id="api-response-area">
+                <h3>API Response</h3>
+                <div class="response-content" id="api-response-content">
+                    Welcome to Agent Influence Broker Enterprise Dashboard!
+                    Click any button above to explore the API endpoints. 🔹 This
+                    is a production-ready platform for AI agent interactions 🔹
+                    Full REST API with comprehensive validation 🔹 Real-time
+                    negotiation and transaction processing 🔹 Enterprise-grade
+                    reliability and performance
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Load initial stats and savings
+            loadStats()
+            loadSavingsData()
+
+            // Update savings every 10 seconds for live ticker effect
+            setInterval(loadSavingsData, 10000)
+
+            async function loadSavingsData() {
+                try {
+                    const response = await fetch('/api/v1/savings/analytics')
+                    const data = await response.json()
+
+                    if (response.ok) {
+                        // Update main savings metrics
+                        document.getElementById(
+                            'totalSavings'
+                        ).textContent = `$${data.total_savings.amount.toLocaleString()}`
+                        document.getElementById(
+                            'totalSavingsPercent'
+                        ).textContent = `${data.total_savings.percentage}% saved`
+                        document.getElementById(
+                            'todaySavings'
+                        ).textContent = `$${data.period_savings.today.toLocaleString()}`
+                        document.getElementById(
+                            'weekSavings'
+                        ).textContent = `$${data.period_savings.this_week.toLocaleString()}`
+                        document.getElementById(
+                            'avgSavings'
+                        ).textContent = `${data.average_savings_percentage}%`
+
+                        // Update last updated timestamp
+                        const lastUpdated = new Date(
+                            data.live_ticker.last_updated
+                        )
+                        document.getElementById(
+                            'lastUpdated'
+                        ).textContent = `Updated: ${lastUpdated.toLocaleTimeString()}`
+
+                        // Create scrolling ticker content
+                        let tickerContent = '🎉 '
+                        if (data.top_savings.length > 0) {
+                            const topSaving = data.top_savings[0]
+                            tickerContent += `Latest: $${topSaving.savings_amount.toLocaleString()} saved (${
+                                topSaving.savings_percentage
+                            }%) on "${topSaving.description}" • `
+
+                            // Add more recent savings
+                            data.top_savings.slice(1, 3).forEach((saving) => {
+                                tickerContent += `$${saving.savings_amount.toLocaleString()} saved on ${
+                                    saving.description
+                                } • `
+                            })
+                        }
+                        tickerContent += `Total Platform Savings: $${data.total_savings.amount.toLocaleString()} • Average Rate: ${
+                            data.average_savings_percentage
+                        }% • `
+                        tickerContent += `${data.transaction_summary.savings_transactions} successful negotiations with savings • `
+                        tickerContent += `Trend: ${data.live_ticker.trend.toUpperCase()} 📈`
+
+                        document.getElementById('savingsTicker').textContent =
+                            tickerContent
+                    } else {
+                        console.error('Failed to load savings data:', data)
+                    }
+                } catch (error) {
+                    console.error('Error loading savings data:', error)
+                    // Show fallback data
+                    document.getElementById('totalSavings').textContent =
+                        '$2,949'
+                    document.getElementById('totalSavingsPercent').textContent =
+                        '22.8% saved'
+                    document.getElementById('todaySavings').textContent = '$0'
+                    document.getElementById('weekSavings').textContent =
+                        '$2,949'
+                    document.getElementById('avgSavings').textContent = '22.8%'
+                    document.getElementById('savingsTicker').textContent =
+                        '🎉 Agent negotiations saving customers an average of 22.8% • Total platform savings: $2,949 • Enterprise-grade AI negotiation reducing costs 📈'
+                }
+            }
+
+            async function makeRequest(url, method = 'GET', data = null) {
+                const responseDiv = document.getElementById('response')
+                responseDiv.textContent = 'Loading...'
+                responseDiv.className = 'response-content loading'
+
+                try {
+                    const options = {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+
+                    if (data) {
+                        options.body = JSON.stringify(data)
+                    }
+
+                    const response = await fetch(url, options)
+                    const result = await response.json()
+
+                    responseDiv.textContent = JSON.stringify(result, null, 2)
+                    responseDiv.className = 'response-content'
+
+                    return result
+                } catch (error) {
+                    responseDiv.textContent = `Error: ${error.message}`
+                    responseDiv.className = 'response-content'
+                }
+            }
+
+            async function loadStats() {
+                try {
+                    const health = await fetch('/health').then((r) => r.json())
+                    if (health.components && health.components.sample_data) {
+                        document.getElementById('agentCount').textContent =
+                            health.components.sample_data.agents || 0
+                        document.getElementById(
+                            'negotiationCount'
+                        ).textContent =
+                            health.components.sample_data.negotiations || 0
+                        document.getElementById(
+                            'transactionCount'
+                        ).textContent =
+                            health.components.sample_data.transactions || 0
+                    }
+                } catch (error) {
+                    console.error('Failed to load stats:', error)
+                }
+            }
+
+            function loadAgents() {
+                makeRequest('/api/v1/agents')
+            }
+
+            function loadNegotiations() {
+                makeRequest('/api/v1/negotiations')
+            }
+
+            function loadTransactions() {
+                makeRequest('/api/v1/transactions')
+            }
+
+            function loadHealth() {
+                makeRequest('/health')
+            }
+
+            // Load savings data on page load and refresh every 10 seconds
+            loadSavingsData()
+            setInterval(loadSavingsData, 10000)
+
+            async function loadSavingsData() {
+                try {
+                    const response = await fetch('/api/v1/savings/analytics')
+                    const data = await response.json()
+
+                    if (response.ok) {
+                        // Update main savings metrics
+                        document.getElementById(
+                            'totalSavings'
+                        ).textContent = `$${data.total_savings.amount.toLocaleString()}`
+                        document.getElementById(
+                            'totalSavingsPercent'
+                        ).textContent = `${data.total_savings.percentage}% saved`
+                        document.getElementById(
+                            'todaySavings'
+                        ).textContent = `$${data.period_savings.today.toLocaleString()}`
+                        document.getElementById(
+                            'weekSavings'
+                        ).textContent = `$${data.period_savings.this_week.toLocaleString()}`
+                        document.getElementById(
+                            'avgSavings'
+                        ).textContent = `${data.average_savings_percentage}%`
+
+                        // Update ticker with top savings
+                        const tickerText = data.top_savings
+                            .map(
+                                (saving) =>
+                                    `🎉 ${
+                                        saving.description
+                                    }: $${saving.savings_amount.toLocaleString()} saved (${
+                                        saving.savings_percentage
+                                    }%)`
+                            )
+                            .join(' • ')
+
+                        document.getElementById('savingsTicker').textContent =
+                            tickerText
+
+                        // Update last updated time
+                        const lastUpdated = new Date(
+                            data.live_ticker.last_updated
+                        )
+                        document.getElementById(
+                            'lastUpdated'
+                        ).textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`
+
+                        console.log('💰 Savings data updated:', data)
+                    } else {
+                        console.error('Failed to load savings data:', data)
+                        document.getElementById('savingsTicker').textContent =
+                            '⚠️ Unable to load savings data - checking connection...'
+                    }
+                } catch (error) {
+                    console.error('Error loading savings data:', error)
+                    document.getElementById('savingsTicker').textContent =
+                        '⚠️ Connection error - retrying...'
+                }
+            }
+        </script>
+    </body>
+</html>

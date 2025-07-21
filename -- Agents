@@ -1,0 +1,62 @@
+-- Agents
+create table if not exists agents (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  agent_type text not null,
+  reputation float default 0,
+  capabilities jsonb,
+  owner_id uuid,
+  is_active boolean default true,
+  created_at timestamp with time zone default now()
+);
+
+-- Negotiations
+create table if not exists negotiations (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  initiator_agent_id uuid references agents(id),
+  responder_agent_id uuid references agents(id),
+  negotiation_type text,
+  status text,
+  initial_proposal jsonb,
+  created_at timestamp with time zone default now()
+);
+
+-- Transactions
+create table if not exists transactions (
+  id uuid primary key default gen_random_uuid(),
+  payer_agent_id uuid references agents(id),
+  payee_agent_id uuid references agents(id),
+  amount float not null,
+  original_amount float,
+  savings_amount float,
+  savings_percentage float,
+  description text,
+  status text,
+  completed_at timestamp with time zone,
+  created_at timestamp with time zone default now()
+);
+
+-- Webhooks
+create table if not exists webhooks (
+  id uuid primary key default gen_random_uuid(),
+  event_type text,
+  payload jsonb,
+  delivered boolean default false,
+  created_at timestamp with time zone default now()
+);
+
+-- Influence Metrics
+create table if not exists influence_metrics (
+  id uuid primary key default gen_random_uuid(),
+  agent_id uuid references agents(id),
+  score float,
+  calculated_at timestamp with time zone default now()
+);
+
+-- Enable RLS
+alter table agents enable row level security;
+alter table negotiations enable row level security;
+alter table transactions enable row level security;
+alter table webhooks enable row level security;
+alter table influence_metrics enable row level security;

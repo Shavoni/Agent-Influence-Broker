@@ -1,0 +1,87 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": "${command:pickArgs}"
+        },
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+
+        {
+            "name": "FastAPI Development Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/uvicorn",
+            "args": [
+                "src.app.main:app",
+                "--reload",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "true"
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "FastAPI Production Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/uvicorn",
+            "args": [
+                "src.app.main:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+                "--workers",
+                "4"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEBUG": "false"
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Python: Pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["src/tests/", "-v", "--cov=src/app"],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
