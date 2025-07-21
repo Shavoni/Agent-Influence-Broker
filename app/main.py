@@ -15,7 +15,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.endpoints import agents, negotiations, transactions
+from app.api.v1.endpoints import agents, negotiations, transactions, external_agents
 from app.api.v1 import influence
 # TODO: Fix webhook imports when schemas are complete
 # from app.api.v1 import webhooks
@@ -139,6 +139,13 @@ def create_application() -> FastAPI:
         transactions.router,
         prefix="/api/v1/transactions",
         tags=["transactions"],
+        dependencies=[Depends(get_current_user_token)],
+    )
+
+    application.include_router(
+        external_agents.router,
+        prefix="/api/v1/external-agents",
+        tags=["external-agents"],
         dependencies=[Depends(get_current_user_token)],
     )
 
