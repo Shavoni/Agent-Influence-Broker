@@ -6,25 +6,22 @@ Implements comprehensive negotiation workflows with async operations.
 
 import logging
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, status
-from fastapi.responses import JSONResponse
 
-from app.core.auth import (
-    User,
-    get_current_active_user,
-    get_mock_user,
-    verify_agent_ownership,
-)
+from app.core.auth import User, get_mock_user, verify_agent_ownership
 from app.core.config import get_settings
-from app.core.exceptions import BusinessLogicError, NotFoundError, ValidationError
+from app.core.exceptions import (
+    BusinessLogicError,
+    NotFoundError,
+    ValidationError,
+)
 from app.models.negotiation import (
     Negotiation,
     NegotiationCreate,
+    NegotiationResponse,
     NegotiationStatus,
     NegotiationTerms,
-    NegotiationUpdate,
 )
 from app.services.agent_service import AgentService
 from app.services.negotiation_service import NegotiationService
@@ -56,13 +53,15 @@ async def get_current_user_dependency() -> User:
         )  # Replace with get_current_active_user for production
 
 
-@router.post("/", response_model=Negotiation, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=NegotiationResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_negotiation(
     negotiation_data: NegotiationCreate,
     negotiation_service: NegotiationService = Depends(get_negotiation_service),
     agent_service: AgentService = Depends(get_agent_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Negotiation:
+) -> NegotiationResponse:
     """
     Create a new negotiation between two agents.
 
@@ -95,7 +94,9 @@ async def create_negotiation(
             negotiation_data.initiator_id, current_user.id
         )
 
-        if not verify_agent_ownership(negotiation_data.initiator_id, current_user):
+        if not verify_agent_ownership(
+            negotiation_data.initiator_id, current_user
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only create negotiations with your own agents",
@@ -133,12 +134,12 @@ async def create_negotiation(
         )
 
 
-@router.get("/{negotiation_id}", response_model=Negotiation)
+@router.get("/{negotiation_id}", response_model=NegotiationResponse)
 async def get_negotiation(
     negotiation_id: str,
     negotiation_service: NegotiationService = Depends(get_negotiation_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Negotiation:
+) -> NegotiationResponse:
     """
     Retrieve a negotiation by ID with access control.
 
@@ -156,7 +157,9 @@ async def get_negotiation(
         HTTPException: If negotiation not found or access denied
     """
     try:
-        logger.info(f"User {current_user.id} requesting negotiation {negotiation_id}")
+        logger.info(
+            f"User {current_user.id} requesting negotiation {negotiation_id}"
+        )
 
         negotiation = await negotiation_service.get_negotiation_by_id(
             negotiation_id, current_user.id
@@ -173,14 +176,16 @@ async def get_negotiation(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error retrieving negotiation {negotiation_id}: {e}")
+        logger.error(
+            f"Unexpected error retrieving negotiation {negotiation_id}: {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
         )
 
 
-@router.get("/", response_model=List[Negotiation])
+@router.get("/", response_model=List[NegotiationResponse])
 async def list_negotiations(
     skip: int = Query(0, ge=0, description="Number of negotiations to skip"),
     limit: int = Query(
@@ -189,10 +194,12 @@ async def list_negotiations(
     status_filter: Optional[NegotiationStatus] = Query(
         None, description="Filter by status"
     ),
-    agent_id: Optional[str] = Query(None, description="Filter by agent participation"),
+    agent_id: Optional[str] = Query(
+        None, description="Filter by agent participation"
+    ),
     negotiation_service: NegotiationService = Depends(get_negotiation_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> List[Negotiation]:
+) -> List[NegotiationResponse]:
     """
     List negotiations with filtering and pagination.
 
@@ -245,13 +252,13 @@ async def list_negotiations(
         )
 
 
-@router.post("/{negotiation_id}/counter-offer", response_model=Negotiation)
+@router.post("/{negotiation_id}/counter-offer", response_model=NegotiationResponse)
 async def submit_counter_offer(
     negotiation_id: str,
     new_terms: NegotiationTerms,
     negotiation_service: NegotiationService = Depends(get_negotiation_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Negotiation:
+) -> NegotiationResponse:
     """
     Submit a counter offer in an active negotiation.
 
@@ -285,7 +292,9 @@ async def submit_counter_offer(
         return updated_negotiation
 
     except NotFoundError as e:
-        logger.warning(f"Negotiation not found for counter offer: {negotiation_id}")
+        logger.warning(
+            f"Negotiation not found for counter offer: {negotiation_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Not found", "message": str(e)},
@@ -304,13 +313,13 @@ async def submit_counter_offer(
         )
 
 
-@router.patch("/{negotiation_id}/status", response_model=Negotiation)
+@router.patch("/{negotiation_id}/status", response_model=NegotiationResponse)
 async def update_negotiation_status(
     negotiation_id: str,
     new_status: NegotiationStatus,
     negotiation_service: NegotiationService = Depends(get_negotiation_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Negotiation:
+) -> NegotiationResponse:
     """
     Update negotiation status (accept, reject, cancel).
 
@@ -334,8 +343,10 @@ async def update_negotiation_status(
             f"status to {new_status.value}"
         )
 
-        updated_negotiation = await negotiation_service.update_negotiation_status(
-            negotiation_id, new_status.value, current_user.id
+        updated_negotiation = (
+            await negotiation_service.update_negotiation_status(
+                negotiation_id, new_status.value, current_user.id
+            )
         )
 
         logger.info(
@@ -344,7 +355,9 @@ async def update_negotiation_status(
         return updated_negotiation
 
     except NotFoundError as e:
-        logger.warning(f"Negotiation not found for status update: {negotiation_id}")
+        logger.warning(
+            f"Negotiation not found for status update: {negotiation_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Not found", "message": str(e)},
@@ -397,9 +410,13 @@ async def get_negotiation_history(
         )
 
         # Verify access to negotiation
-        await negotiation_service.get_negotiation_by_id(negotiation_id, current_user.id)
+        await negotiation_service.get_negotiation_by_id(
+            negotiation_id, current_user.id
+        )
 
-        history = await negotiation_service.get_negotiation_history(negotiation_id)
+        history = await negotiation_service.get_negotiation_history(
+            negotiation_id
+        )
 
         return history
 
@@ -449,7 +466,8 @@ async def negotiation_websocket(
         )
 
         # Keep connection alive and send periodic updates
-        # In production, this would integrate with Redis pub/sub or database change streams
+        # In production, this would integrate with Redis pub/sub or database
+        # change streams
         while True:
             # Listen for messages from client (ping/pong, etc.)
             try:
@@ -462,4 +480,6 @@ async def negotiation_websocket(
     except Exception as e:
         logger.error(f"WebSocket error for negotiation {negotiation_id}: {e}")
     finally:
-        logger.info(f"WebSocket connection closed for negotiation {negotiation_id}")
+        logger.info(
+            f"WebSocket connection closed for negotiation {negotiation_id}"
+        )

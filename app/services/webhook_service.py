@@ -6,28 +6,26 @@ delivery guarantees, retry logic, and security validation following project
 architecture with async/await patterns and comprehensive error handling.
 """
 
-import asyncio
 import hashlib
 import hmac
 import json
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import httpx
 from fastapi import HTTPException, status
-from sqlalchemy import and_, desc, func, or_, select, update
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.database import get_database_session
-from app.core.logging import get_logger, log_security_event
+from app.core.logging import get_logger
+
 # TODO: Create webhook models when needed
 # from app.models.webhook import Webhook, WebhookDelivery, WebhookEvent
-from app.schemas.webhook import (
-    WebhookCreateRequest,
-    WebhookResponse,
-)
+from app.schemas.webhook import WebhookCreateRequest, WebhookResponse
+
 # TODO: Add these schemas when needed
 # WebhookDeliveryResponse,
 # WebhookEventRequest,
@@ -47,14 +45,23 @@ class WebhookEngine:
         """Initialize webhook engine with delivery settings."""
         self.settings = get_settings()
         self.max_retry_attempts = 5
-        self.retry_intervals = [30, 300, 900, 3600, 7200]  # 30s, 5m, 15m, 1h, 2h
+        self.retry_intervals = [
+            30,
+            300,
+            900,
+            3600,
+            7200,
+        ]  # 30s, 5m, 15m, 1h, 2h
         self.delivery_timeout = 30  # seconds
         self.max_payload_size = 1024 * 1024  # 1MB
 
         # Event type configurations
         self.event_configurations = {
             "negotiation.initiated": {"priority": "high", "retry": True},
-            "negotiation.proposal_submitted": {"priority": "medium", "retry": True},
+            "negotiation.proposal_submitted": {
+                "priority": "medium",
+                "retry": True,
+            },
             "negotiation.completed": {"priority": "high", "retry": True},
             "transaction.created": {"priority": "high", "retry": True},
             "transaction.completed": {"priority": "high", "retry": True},
@@ -95,9 +102,12 @@ class WebhookEngine:
                     events=json.dumps(webhook_data.events),
                     is_active=webhook_data.is_active,
                     description=webhook_data.description,
-                    custom_headers=json.dumps(webhook_data.custom_headers or {}),
+                    custom_headers=json.dumps(
+                        webhook_data.custom_headers or {}
+                    ),
                     timeout_seconds=min(
-                        webhook_data.timeout_seconds or self.delivery_timeout, 60
+                        webhook_data.timeout_seconds or self.delivery_timeout,
+                        60,
                     ),
                     max_retries=min(
                         webhook_data.max_retries or self.max_retry_attempts, 10
@@ -119,9 +129,13 @@ class WebhookEngine:
                     webhook.last_error = test_result["error"]
                     await session.commit()
 
-                logger.info(f"Webhook created: {webhook.id} for user {user_id}")
+                logger.info(
+                    f"Webhook created: {webhook.id} for user {user_id}"
+                )
 
-                return await self._convert_to_response(webhook, include_secret=True)
+                return await self._convert_to_response(
+                    webhook, include_secret=True
+                )
 
         except HTTPException:
             raise
@@ -152,10 +166,14 @@ class WebhookEngine:
         try:
             async with get_database_session() as session:
                 # Get active webhooks for this event type
-                webhooks = await self._get_webhooks_for_event(session, event_type)
+                webhooks = await self._get_webhooks_for_event(
+                    session, event_type
+                )
 
                 if not webhooks:
-                    logger.debug(f"No webhooks registered for event: {event_type}")
+                    logger.debug(
+                        f"No webhooks registered for event: {event_type}"
+                    )
                     return []
 
                 # Create webhook event record
@@ -181,11 +199,15 @@ class WebhookEngine:
                         delivery_results.append(delivery_result)
 
                     except Exception as e:
-                        logger.error(f"Webhook delivery failed for {webhook.id}: {e}")
+                        logger.error(
+                            f"Webhook delivery failed for {webhook.id}: {e}"
+                        )
 
                         # Create failed delivery record
-                        failed_delivery = await self._create_failed_delivery_record(
-                            session, webhook.id, event_record.id, str(e)
+                        failed_delivery = (
+                            await self._create_failed_delivery_record(
+                                session, webhook.id, event_record.id, str(e)
+                            )
                         )
                         delivery_results.append(failed_delivery)
 
@@ -219,7 +241,8 @@ class WebhookEngine:
                     .where(
                         and_(
                             WebhookDelivery.status == "failed",
-                            WebhookDelivery.retry_count < self.max_retry_attempts,
+                            WebhookDelivery.retry_count
+                            < self.max_retry_attempts,
                             WebhookDelivery.next_retry_at <= datetime.utcnow(),
                             WebhookDelivery.created_at >= retry_cutoff,
                         )
@@ -240,7 +263,9 @@ class WebhookEngine:
                 for delivery in failed_deliveries:
                     try:
                         # Get associated webhook and event
-                        webhook = await self._get_webhook(session, delivery.webhook_id)
+                        webhook = await self._get_webhook(
+                            session, delivery.webhook_id
+                        )
                         event = await self._get_webhook_event(
                             session, delivery.event_id
                         )
@@ -266,7 +291,9 @@ class WebhookEngine:
                                 retry_stats["permanent_failures"] += 1
 
                     except Exception as e:
-                        logger.error(f"Retry delivery failed for {delivery.id}: {e}")
+                        logger.error(
+                            f"Retry delivery failed for {delivery.id}: {e}"
+                        )
                         retry_stats["failed_retries"] += 1
 
                 await session.commit()
@@ -297,7 +324,9 @@ class WebhookEngine:
             payload = self._prepare_webhook_payload(webhook, event, event_data)
 
             # Generate HMAC signature
-            signature = self._generate_webhook_signature(webhook.secret, payload)
+            signature = self._generate_webhook_signature(
+                webhook.secret, payload
+            )
 
             # Prepare headers
             headers = self._prepare_webhook_headers(webhook, signature)
@@ -316,7 +345,9 @@ class WebhookEngine:
             await session.flush()
 
             # Attempt delivery
-            async with httpx.AsyncClient(timeout=webhook.timeout_seconds) as client:
+            async with httpx.AsyncClient(
+                timeout=webhook.timeout_seconds
+            ) as client:
                 start_time = datetime.utcnow()
 
                 response = await client.post(
@@ -327,9 +358,12 @@ class WebhookEngine:
                 response_time = (end_time - start_time).total_seconds()
 
                 # Update delivery record
-                delivery.status = "success" if response.is_success else "failed"
+                delivery.status = (
+                    "success" if response.is_success else "failed"
+                )
                 delivery.response_status_code = response.status_code
-                delivery.response_body = response.text[:1000]  # Limit response size
+                # Limit response size
+                delivery.response_body = response.text[:1000]
                 delivery.response_time_ms = int(response_time * 1000)
                 delivery.delivered_at = end_time
 
@@ -381,7 +415,9 @@ class WebhookEngine:
             delivery.status = "failed"
             delivery.error_message = f"Unexpected error: {str(e)}"
 
-            logger.error(f"Webhook delivery unexpected error: {delivery_id} - {e}")
+            logger.error(
+                f"Webhook delivery unexpected error: {delivery_id} - {e}"
+            )
 
         return await self._convert_delivery_to_response(delivery)
 
@@ -425,7 +461,9 @@ class WebhookEngine:
         # Add custom headers
         try:
             custom_headers = (
-                json.loads(webhook.custom_headers) if webhook.custom_headers else {}
+                json.loads(webhook.custom_headers)
+                if webhook.custom_headers
+                else {}
             )
             headers.update(custom_headers)
         except json.JSONDecodeError:

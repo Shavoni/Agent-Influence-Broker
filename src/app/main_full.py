@@ -6,12 +6,12 @@ Production-ready implementation with full feature set
 import asyncio
 import json
 import logging
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
-from typing import Dict, Any, Optional
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Dict, Optional
+from urllib.parse import parse_qs, urlparse
 
-from .fastapi_lite import app, HTTPException, Response
 from .data_store import data_store
+from .fastapi_lite import HTTPException, Response, app
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,17 +24,21 @@ async def root():
     """Serve the enterprise dashboard"""
     try:
         import os
-        dashboard_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "dashboard.html")
+        dashboard_path = os.path.join(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(__file__))),
+             "dashboard.html")
         if os.path.exists(dashboard_path):
             with open(dashboard_path, 'r') as f:
                 return f.read()
     except Exception:
         pass
-    
+
     # Fallback to JSON response
     return {
         "message": "Welcome to Agent Influence Broker",
-        "version": "0.1.0", 
+        "version": "0.1.0",
         "status": "operational",
         "documentation": "Full REST API available",
         "features": [
@@ -46,8 +50,8 @@ async def root():
         ]
     }
         ]
-    }se-Grade FastAPI Application
-Production-ready implementation with full feature set
+    }se - Grade FastAPI Application
+Production - ready implementation with full feature set
 """
 
 import asyncio
@@ -163,7 +167,12 @@ async def create_agent(agent_data: Dict[str, Any]):
                 )
 
         # Validate agent_type
-        valid_types = ["trading", "negotiation", "influence", "service", "analytics"]
+        valid_types = [
+    "trading",
+    "negotiation",
+    "influence",
+    "service",
+     "analytics"]
         if agent_data["agent_type"] not in valid_types:
             raise HTTPException(
                 status_code=400,
@@ -241,17 +250,27 @@ async def create_negotiation(negotiation_data: Dict[str, Any]):
                 )
 
         # Validate that agents exist and are active
-        initiator = data_store.get_agent(negotiation_data["initiator_agent_id"])
-        responder = data_store.get_agent(negotiation_data["responder_agent_id"])
+        initiator = data_store.get_agent(
+    negotiation_data["initiator_agent_id"])
+        responder = data_store.get_agent(
+    negotiation_data["responder_agent_id"])
 
         if not initiator:
-            raise HTTPException(status_code=400, detail="Initiator agent not found")
+            raise HTTPException(
+    status_code=400,
+     detail="Initiator agent not found")
         if not responder:
-            raise HTTPException(status_code=400, detail="Responder agent not found")
+            raise HTTPException(
+    status_code=400,
+     detail="Responder agent not found")
         if not initiator.is_active:
-            raise HTTPException(status_code=400, detail="Initiator agent is not active")
+            raise HTTPException(
+    status_code=400,
+     detail="Initiator agent is not active")
         if not responder.is_active:
-            raise HTTPException(status_code=400, detail="Responder agent is not active")
+            raise HTTPException(
+    status_code=400,
+     detail="Responder agent is not active")
 
         negotiation = data_store.create_negotiation(negotiation_data)
 
@@ -324,20 +343,30 @@ async def create_transaction(transaction_data: Dict[str, Any]):
                     status_code=400, detail="Amount must be greater than 0"
                 )
         except (ValueError, TypeError):
-            raise HTTPException(status_code=400, detail="Amount must be a valid number")
+            raise HTTPException(
+    status_code=400,
+     detail="Amount must be a valid number")
 
         # Validate that agents exist and are active
         payer = data_store.get_agent(transaction_data["payer_agent_id"])
         payee = data_store.get_agent(transaction_data["payee_agent_id"])
 
         if not payer:
-            raise HTTPException(status_code=400, detail="Payer agent not found")
+            raise HTTPException(
+    status_code=400,
+     detail="Payer agent not found")
         if not payee:
-            raise HTTPException(status_code=400, detail="Payee agent not found")
+            raise HTTPException(
+    status_code=400,
+     detail="Payee agent not found")
         if not payer.is_active:
-            raise HTTPException(status_code=400, detail="Payer agent is not active")
+            raise HTTPException(
+    status_code=400,
+     detail="Payer agent is not active")
         if not payee.is_active:
-            raise HTTPException(status_code=400, detail="Payee agent is not active")
+            raise HTTPException(
+    status_code=400,
+     detail="Payee agent is not active")
 
         transaction = data_store.create_transaction(transaction_data)
 
@@ -363,8 +392,10 @@ async def get_agent_stats(agent_id: str):
         raise HTTPException(status_code=404, detail="Agent not found")
 
     # Get related negotiations and transactions
-    negotiations, _ = data_store.list_negotiations(agent_id=agent_id, limit=1000)
-    transactions, _ = data_store.list_transactions(agent_id=agent_id, limit=1000)
+    negotiations, _ = data_store.list_negotiations(
+        agent_id=agent_id, limit=1000)
+    transactions, _ = data_store.list_transactions(
+        agent_id=agent_id, limit=1000)
 
     return {
         "agent_id": agent_id,
@@ -434,17 +465,23 @@ class AgentBrokerHTTPHandler(BaseHTTPRequestHandler):
 
             # Send response with proper HTTP/1.1 format
             self.send_response(response.status_code)
-            
+
             # Check if response is HTML
-            if isinstance(response.content, str) and response.content.strip().startswith('<!DOCTYPE html>'):
+            if isinstance(
+    response.content,
+     str) and response.content.strip().startswith('<!DOCTYPE html>'):
                 self.send_header("Content-Type", "text/html; charset=utf-8")
             else:
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-            
+                self.send_header(
+    "Content-Type",
+     "application/json; charset=utf-8")
+
             self._set_cors_headers()
             self.end_headers()
 
-            if isinstance(response.content, str) and response.content.strip().startswith('<!DOCTYPE html>'):
+            if isinstance(
+    response.content,
+     str) and response.content.strip().startswith('<!DOCTYPE html>'):
                 self.wfile.write(response.content.encode("utf-8"))
             else:
                 response_data = json.dumps(response.content, indent=2)
@@ -459,7 +496,9 @@ class AgentBrokerHTTPHandler(BaseHTTPRequestHandler):
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header(
+    "Access-Control-Allow-Headers",
+     "Content-Type, Authorization")
 
     def _send_error(self, status: int, message: str):
         self.send_response(status)

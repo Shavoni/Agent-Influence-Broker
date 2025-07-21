@@ -2,11 +2,11 @@
 Negotiation schemas using dataclasses
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
-from datetime import datetime
 import uuid
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class NegotiationStatusEnum(Enum):
@@ -29,6 +29,7 @@ class NegotiationPhaseEnum(Enum):
 @dataclass
 class NegotiationCreate:
     """Schema for creating a negotiation"""
+
     title: str
     responder_agent_id: uuid.UUID
     negotiation_type: str
@@ -49,6 +50,7 @@ class NegotiationCreate:
 @dataclass
 class NegotiationUpdate:
     """Schema for updating a negotiation"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[NegotiationStatusEnum] = None
@@ -58,6 +60,7 @@ class NegotiationUpdate:
 @dataclass
 class NegotiationResponse:
     """Schema for negotiation response"""
+
     id: uuid.UUID
     title: str
     description: Optional[str]
@@ -82,6 +85,7 @@ class NegotiationResponse:
 @dataclass
 class NegotiationMessageCreate:
     """Schema for creating a negotiation message"""
+
     message_type: str
     content: Dict[str, Any]
     proposal_terms: Optional[Dict[str, Any]] = None
@@ -90,6 +94,7 @@ class NegotiationMessageCreate:
 @dataclass
 class NegotiationMessageResponse:
     """Schema for negotiation message response"""
+
     id: uuid.UUID
     negotiation_id: uuid.UUID
     sender_agent_id: uuid.UUID

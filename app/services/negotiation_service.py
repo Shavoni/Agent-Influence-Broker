@@ -6,25 +6,19 @@ negotiation protocols, strategy evaluation, and state management
 following project architecture with async/await patterns.
 """
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_database_session
 from app.core.logging import get_logger, log_security_event
 from app.models.agent import Agent
-from app.models.negotiation import (
-    Negotiation,
-    NegotiationStatus,
-    Proposal,
-    ProposalType,
-)
+from app.models.negotiation import Negotiation, NegotiationStatus, Proposal
 from app.schemas.negotiation import (
     NegotiationCreateRequest,
     NegotiationListResponse,
@@ -48,11 +42,31 @@ class NegotiationEngine:
     def __init__(self):
         """Initialize negotiation engine with strategy patterns."""
         self.strategy_weights = {
-            "aggressive": {"pressure": 0.8, "concession": 0.2, "time_factor": 0.9},
-            "balanced": {"pressure": 0.5, "concession": 0.5, "time_factor": 0.6},
-            "cooperative": {"pressure": 0.3, "concession": 0.7, "time_factor": 0.4},
-            "analytical": {"pressure": 0.4, "concession": 0.4, "time_factor": 0.2},
-            "adaptive": {"pressure": 0.6, "concession": 0.4, "time_factor": 0.5},
+            "aggressive": {
+                "pressure": 0.8,
+                "concession": 0.2,
+                "time_factor": 0.9,
+            },
+            "balanced": {
+                "pressure": 0.5,
+                "concession": 0.5,
+                "time_factor": 0.6,
+            },
+            "cooperative": {
+                "pressure": 0.3,
+                "concession": 0.7,
+                "time_factor": 0.4,
+            },
+            "analytical": {
+                "pressure": 0.4,
+                "concession": 0.4,
+                "time_factor": 0.2,
+            },
+            "adaptive": {
+                "pressure": 0.6,
+                "concession": 0.4,
+                "time_factor": 0.5,
+            },
         }
 
     async def initiate_negotiation(
@@ -130,7 +144,10 @@ class NegotiationEngine:
             )
 
     async def submit_proposal(
-        self, negotiation_id: str, proposal_data: ProposalCreateRequest, user_id: str
+        self,
+        negotiation_id: str,
+        proposal_data: ProposalCreateRequest,
+        user_id: str,
     ) -> ProposalResponse:
         """
         Submit proposal in active negotiation with strategy evaluation.
@@ -155,7 +172,10 @@ class NegotiationEngine:
 
                 # Validate proposal permissions
                 await self._validate_proposal_permissions(
-                    session, negotiation, proposal_data.proposer_agent_id, user_id
+                    session,
+                    negotiation,
+                    proposal_data.proposer_agent_id,
+                    user_id,
                 )
 
                 # Evaluate proposal strategy
@@ -175,7 +195,9 @@ class NegotiationEngine:
                     - negotiation.current_value,
                     justification=proposal_data.justification,
                     terms=self._serialize_terms(proposal_data.terms),
-                    conditions=self._serialize_conditions(proposal_data.conditions),
+                    conditions=self._serialize_conditions(
+                        proposal_data.conditions
+                    ),
                     response_deadline=datetime.utcnow() + timedelta(hours=24),
                     influence_score=strategy_analysis["influence_score"],
                     strategy_type=strategy_analysis["strategy_type"],
@@ -186,7 +208,9 @@ class NegotiationEngine:
                 session.add(proposal)
 
                 # Update negotiation state
-                await self._update_negotiation_state(session, negotiation, proposal)
+                await self._update_negotiation_state(
+                    session, negotiation, proposal
+                )
 
                 # Record influence interaction
                 await influence_service.record_proposal_influence(
@@ -240,7 +264,9 @@ class NegotiationEngine:
                 negotiation = proposal.negotiation
 
                 # Validate response permissions
-                await self._validate_response_permissions(session, proposal, user_id)
+                await self._validate_response_permissions(
+                    session, proposal, user_id
+                )
 
                 response_type = response_data.get("response_type")
 
@@ -323,11 +349,15 @@ class NegotiationEngine:
                 ):
                     log_security_event(
                         "unauthorized_negotiation_access",
-                        {"negotiation_id": negotiation_id, "requesting_user": user_id},
+                        {
+                            "negotiation_id": negotiation_id,
+                            "requesting_user": user_id,
+                        },
                         logger,
                     )
                     raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied",
                     )
 
                 return await self._convert_to_response(session, negotiation)
@@ -416,10 +446,14 @@ class NegotiationEngine:
         )
         time_pressure = self._calculate_time_pressure(negotiation)
 
-        influence_score = min(1.0, base_influence * strategy_modifier * time_pressure)
+        influence_score = min(
+            1.0, base_influence * strategy_modifier * time_pressure
+        )
 
         # Determine strategy type
-        strategy_type = self._classify_strategy(value_change_pct, proposal_data)
+        strategy_type = self._classify_strategy(
+            value_change_pct, proposal_data
+        )
 
         # Calculate confidence level
         confidence_level = self._calculate_confidence(
@@ -436,7 +470,9 @@ class NegotiationEngine:
         }
 
     def _calculate_strategy_modifier(
-        self, proposal_data: ProposalCreateRequest, style_weights: Dict[str, float]
+        self,
+        proposal_data: ProposalCreateRequest,
+        style_weights: Dict[str, float],
     ) -> float:
         """Calculate strategy effectiveness modifier."""
 
@@ -467,8 +503,12 @@ class NegotiationEngine:
         if not negotiation.expires_at:
             return 1.0
 
-        time_remaining = (negotiation.expires_at - datetime.utcnow()).total_seconds()
-        total_time = (negotiation.expires_at - negotiation.created_at).total_seconds()
+        time_remaining = (
+            negotiation.expires_at - datetime.utcnow()
+        ).total_seconds()
+        total_time = (
+            negotiation.expires_at - negotiation.created_at
+        ).total_seconds()
 
         if total_time <= 0:
             return 1.5  # High pressure if expired
@@ -493,7 +533,10 @@ class NegotiationEngine:
             return "aggressive"
         elif abs(value_change_pct) > 0.1:
             return "assertive"
-        elif proposal_data.justification and len(proposal_data.justification) > 200:
+        elif (
+            proposal_data.justification
+            and len(proposal_data.justification) > 200
+        ):
             return "analytical"
         elif proposal_data.terms and len(proposal_data.terms) > 3:
             return "collaborative"
@@ -535,5 +578,9 @@ class NegotiationEngine:
     # Additional helper methods would continue here...
     # (validation, state management, response conversion, etc.)
 
+
 # Global negotiation engine instance
 negotiation_engine = NegotiationEngine()
+
+# Alias for compatibility with API endpoints
+NegotiationService = NegotiationEngine

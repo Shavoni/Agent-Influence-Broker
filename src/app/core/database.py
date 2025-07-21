@@ -2,12 +2,15 @@
 Database Configuration and Connection Management
 """
 
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import structlog
-from supabase import create_client, Client
+from sqlalchemy import MetaData
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.ext.declarative import declarative_base
+from supabase import Client, create_client
 
 from .config import settings
 
@@ -17,7 +20,7 @@ logger = structlog.get_logger(__name__)
 engine = create_async_engine(
     settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
     echo=settings.DEBUG,
-    future=True
+    future=True,
 )
 
 async_session_maker = async_sessionmaker(
@@ -45,8 +48,7 @@ def get_supabase_client() -> Client:
     global supabase
     if not supabase:
         supabase = create_client(
-            settings.SUPABASE_URL,
-            settings.SUPABASE_ANON_KEY
+            settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY
         )
     return supabase
 

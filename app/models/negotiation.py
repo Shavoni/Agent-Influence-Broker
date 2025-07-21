@@ -8,10 +8,10 @@ with SQLAlchemy async patterns.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from sqlalchemy import (
     Boolean,
     Column,
@@ -67,8 +67,12 @@ class Negotiation(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Participants
-    initiator_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
-    responder_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
+    initiator_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
+    responder_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
 
     # Negotiation metadata
     title = Column(String(200), nullable=False)
@@ -90,7 +94,9 @@ class Negotiation(Base):
 
     # Timing constraints
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     expires_at = Column(DateTime)
     completed_at = Column(DateTime)
 
@@ -117,10 +123,14 @@ class Proposal(Base):
 
     # Primary identification
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    negotiation_id = Column(String(36), ForeignKey("negotiations.id"), nullable=False)
+    negotiation_id = Column(
+        String(36), ForeignKey("negotiations.id"), nullable=False
+    )
 
     # Proposal details
-    proposer_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
+    proposer_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
     proposal_type = Column(String(50), nullable=False)
     round_number = Column(Integer, nullable=False)
 
@@ -145,7 +155,9 @@ class Proposal(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     # Relationships
     negotiation = relationship("Negotiation", back_populates="proposals")
@@ -164,9 +176,15 @@ class InfluenceRecord(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Participants
-    influencer_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
-    influenced_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
-    negotiation_id = Column(String(36), ForeignKey("negotiations.id"), nullable=False)
+    influencer_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
+    influenced_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
+    negotiation_id = Column(
+        String(36), ForeignKey("negotiations.id"), nullable=False
+    )
 
     # Influence metrics
     influence_type = Column(
@@ -189,8 +207,12 @@ class InfluenceRecord(Base):
     recorded_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    influencer_agent = relationship("Agent", foreign_keys=[influencer_agent_id])
-    influenced_agent = relationship("Agent", foreign_keys=[influenced_agent_id])
+    influencer_agent = relationship(
+        "Agent", foreign_keys=[influencer_agent_id]
+    )
+    influenced_agent = relationship(
+        "Agent", foreign_keys=[influenced_agent_id]
+    )
     negotiation = relationship("Negotiation", foreign_keys=[negotiation_id])
 
 
@@ -204,11 +226,17 @@ class Transaction(Base):
 
     # Primary identification
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    negotiation_id = Column(String(36), ForeignKey("negotiations.id"), nullable=False)
+    negotiation_id = Column(
+        String(36), ForeignKey("negotiations.id"), nullable=False
+    )
 
     # Transaction parties
-    sender_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
-    receiver_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
+    sender_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
+    receiver_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
 
     # Transaction details
     amount = Column(Float, nullable=False)
@@ -227,10 +255,108 @@ class Transaction(Base):
 
     # Audit trail
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     reference_id = Column(String(100))  # External transaction reference
 
     # Relationships
     negotiation = relationship("Negotiation", foreign_keys=[negotiation_id])
     sender_agent = relationship("Agent", foreign_keys=[sender_agent_id])
     receiver_agent = relationship("Agent", foreign_keys=[receiver_agent_id])
+
+
+# Pydantic Models for API Schemas
+
+class NegotiationTerms(BaseModel):
+    """Terms and conditions for negotiations."""
+    conditions: Dict[str, str] = Field(default_factory=dict)
+    requirements: List[str] = Field(default_factory=list)
+    constraints: Dict[str, str] = Field(default_factory=dict)
+
+
+class NegotiationCreate(BaseModel):
+    """Schema for creating new negotiations."""
+    title: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = None
+    category: Optional[str] = None
+    responder_agent_id: str = Field(..., min_length=1)
+    initial_value: float = Field(..., gt=0)
+    currency: str = Field(default="USD", max_length=10)
+    max_rounds: int = Field(default=10, ge=1, le=50)
+    expires_at: Optional[datetime] = None
+    terms: Optional[NegotiationTerms] = None
+
+
+class NegotiationUpdate(BaseModel):
+    """Schema for updating negotiations."""
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    description: Optional[str] = None
+    status: Optional[NegotiationStatus] = None
+    current_value: Optional[float] = Field(None, gt=0)
+    max_rounds: Optional[int] = Field(None, ge=1, le=50)
+    expires_at: Optional[datetime] = None
+
+
+class NegotiationResponse(BaseModel):
+    """Schema for negotiation responses."""
+    id: str
+    title: str
+    description: Optional[str]
+    category: Optional[str]
+    status: NegotiationStatus
+    initiator_agent_id: str
+    responder_agent_id: str
+    current_round: int
+    max_rounds: int
+    initial_value: float
+    current_value: Optional[float]
+    final_value: Optional[float]
+    currency: str
+    created_at: datetime
+    updated_at: datetime
+    expires_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    total_proposals: int
+    influence_factor: float
+    complexity_score: float
+
+    class Config:
+        from_attributes = True
+
+
+class ProposalCreate(BaseModel):
+    """Schema for creating proposals."""
+    proposal_type: ProposalType
+    proposed_value: float = Field(..., gt=0)
+    justification: Optional[str] = None
+    terms: Optional[Dict[str, str]] = Field(default_factory=dict)
+    conditions: Optional[Dict[str, str]] = Field(default_factory=dict)
+    response_deadline: Optional[datetime] = None
+    strategy_type: Optional[str] = None
+    confidence_level: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+class ProposalResponse(BaseModel):
+    """Schema for proposal responses."""
+    id: str
+    negotiation_id: str
+    proposer_agent_id: str
+    proposal_type: ProposalType
+    round_number: int
+    proposed_value: float
+    value_change: Optional[float]
+    justification: Optional[str]
+    terms: Optional[str]
+    conditions: Optional[str]
+    response_required: bool
+    responded_at: Optional[datetime]
+    response_deadline: Optional[datetime]
+    influence_score: float
+    strategy_type: Optional[str]
+    confidence_level: float
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

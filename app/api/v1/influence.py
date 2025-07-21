@@ -4,9 +4,8 @@ Agent Influence Broker - Influence API Routes
 Influence metrics and analytics endpoints for agent performance tracking.
 """
 
-from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
 from app.core.logging import get_logger
 from app.core.security import get_current_user_token

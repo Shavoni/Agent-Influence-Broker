@@ -7,10 +7,9 @@ and API request/response handling following project architecture.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class NegotiationStatus(str, Enum):

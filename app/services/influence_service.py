@@ -76,19 +76,27 @@ class InfluenceMetricsEngine:
                 agent = await self._get_agent(session, agent_id)
 
                 # Calculate time window
-                cutoff_date = datetime.utcnow() - timedelta(days=time_window_days)
+                cutoff_date = datetime.utcnow() - timedelta(
+                    days=time_window_days
+                )
 
                 # Calculate component scores
-                negotiation_score = await self._calculate_negotiation_success_score(
-                    session, agent_id, cutoff_date
+                negotiation_score = (
+                    await self._calculate_negotiation_success_score(
+                        session, agent_id, cutoff_date
+                    )
                 )
 
-                value_creation_score = await self._calculate_value_creation_score(
-                    session, agent_id, cutoff_date
+                value_creation_score = (
+                    await self._calculate_value_creation_score(
+                        session, agent_id, cutoff_date
+                    )
                 )
 
-                peer_recognition_score = await self._calculate_peer_recognition_score(
-                    session, agent_id, cutoff_date
+                peer_recognition_score = (
+                    await self._calculate_peer_recognition_score(
+                        session, agent_id, cutoff_date
+                    )
                 )
 
                 consistency_score = await self._calculate_consistency_score(
@@ -99,8 +107,10 @@ class InfluenceMetricsEngine:
                     session, agent_id, cutoff_date
                 )
 
-                collaboration_score = await self._calculate_collaboration_score(
-                    session, agent_id, cutoff_date
+                collaboration_score = (
+                    await self._calculate_collaboration_score(
+                        session, agent_id, cutoff_date
+                    )
                 )
 
                 # Calculate weighted overall score
@@ -161,7 +171,9 @@ class InfluenceMetricsEngine:
                 detail="Failed to calculate influence score",
             )
 
-    async def calculate_reputation_score(self, agent_id: str) -> ReputationUpdate:
+    async def calculate_reputation_score(
+        self, agent_id: str
+    ) -> ReputationUpdate:
         """
         Calculate comprehensive reputation score with historical analysis.
 
@@ -185,7 +197,9 @@ class InfluenceMetricsEngine:
                 average_influence = await self._calculate_average_influence(
                     session, agent_id
                 )
-                peer_ratings = await self._calculate_peer_ratings(session, agent_id)
+                peer_ratings = await self._calculate_peer_ratings(
+                    session, agent_id
+                )
                 experience_factor = self._calculate_experience_factor(agent)
                 recent_performance = await self._calculate_recent_performance(
                     session, agent_id
@@ -207,7 +221,9 @@ class InfluenceMetricsEngine:
                 )
 
                 # Update agent reputation
-                await self._update_agent_reputation(session, agent_id, reputation_score)
+                await self._update_agent_reputation(
+                    session, agent_id, reputation_score
+                )
 
                 reputation_update = ReputationUpdate(
                     agent_id=agent_id,
@@ -236,14 +252,19 @@ class InfluenceMetricsEngine:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Reputation calculation failed for agent {agent_id}: {e}")
+            logger.error(
+                f"Reputation calculation failed for agent {agent_id}: {e}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to calculate reputation score",
             )
 
     async def analyze_negotiation_influence(
-        self, negotiation_id: str, initiator_agent_id: str, responder_agent_id: str
+        self,
+        negotiation_id: str,
+        initiator_agent_id: str,
+        responder_agent_id: str,
     ):
         """Record negotiation initiation for influence tracking."""
         try:
@@ -300,9 +321,15 @@ class InfluenceMetricsEngine:
                     context=self._serialize_context(
                         {
                             "proposal_id": proposal_id,
-                            "strategy_type": strategy_analysis["strategy_type"],
-                            "confidence_level": strategy_analysis["confidence_level"],
-                            "value_change_pct": strategy_analysis["value_change_pct"],
+                            "strategy_type": strategy_analysis[
+                                "strategy_type"
+                            ],
+                            "confidence_level": strategy_analysis[
+                                "confidence_level"
+                            ],
+                            "value_change_pct": strategy_analysis[
+                                "value_change_pct"
+                            ],
                         }
                     ),
                     baseline_value=negotiation.current_value,
@@ -444,7 +471,9 @@ class InfluenceMetricsEngine:
         average_influence = mean(successful_influences)
 
         # Apply peer network bonus
-        peer_count = len(set(record.influence_strength for record in influence_records))
+        peer_count = len(
+            set(record.influence_strength for record in influence_records)
+        )
         network_bonus = min(0.3, peer_count * 0.05)
 
         return min(1.0, average_influence + network_bonus)
@@ -485,7 +514,9 @@ class InfluenceMetricsEngine:
         performance_scores = []
         for negotiation in negotiations:
             if negotiation.status == "completed":
-                value_ratio = negotiation.final_value / negotiation.initial_value
+                value_ratio = (
+                    negotiation.final_value / negotiation.initial_value
+                )
                 performance_scores.append(min(2.0, max(0.0, value_ratio)))
 
         if not performance_scores:
@@ -514,7 +545,9 @@ class InfluenceMetricsEngine:
 
         # Get proposals with strategy analysis
         query = select(
-            Proposal.strategy_type, Proposal.confidence_level, Proposal.influence_score
+            Proposal.strategy_type,
+            Proposal.confidence_level,
+            Proposal.influence_score,
         ).where(
             and_(
                 Proposal.proposer_agent_id == agent_id,
@@ -530,7 +563,9 @@ class InfluenceMetricsEngine:
             return 0.0
 
         # Calculate strategy diversity
-        unique_strategies = set(proposal.strategy_type for proposal in proposals)
+        unique_strategies = set(
+            proposal.strategy_type for proposal in proposals
+        )
         # Normalize by max strategies (5)
         strategy_diversity = len(unique_strategies) / 5.0
 
@@ -573,7 +608,9 @@ class InfluenceMetricsEngine:
                 func.count(Proposal.id).label("proposal_count"),
             )
             .select_from(
-                Negotiation.join(Proposal, Proposal.negotiation_id == Negotiation.id)
+                Negotiation.join(
+                    Proposal, Proposal.negotiation_id == Negotiation.id
+                )
             )
             .where(
                 and_(
@@ -582,7 +619,9 @@ class InfluenceMetricsEngine:
                         Negotiation.responder_agent_id == agent_id,
                     ),
                     Negotiation.created_at >= cutoff_date,
-                    Proposal.strategy_type.in_(["collaborative", "cooperative"]),
+                    Proposal.strategy_type.in_(
+                        ["collaborative", "cooperative"]
+                    ),
                 )
             )
             .group_by(Negotiation.id, Negotiation.status)
@@ -614,7 +653,9 @@ class InfluenceMetricsEngine:
 
         # Success rate of collaborative negotiations
         successful_collaborative = sum(
-            1 for neg in collaborative_negotiations if neg.status == "completed"
+            1
+            for neg in collaborative_negotiations
+            if neg.status == "completed"
         )
 
         collaboration_success_rate = (
@@ -665,7 +706,8 @@ class InfluenceMetricsEngine:
 
         # Calculate trend over time
         timestamps = [
-            (record.created_at - records[0].created_at).days for record in records
+            (record.created_at - records[0].created_at).days
+            for record in records
         ]
         scores = [record.influence_strength for record in records]
 
@@ -691,7 +733,9 @@ class InfluenceMetricsEngine:
 
         # Recent performance (last 25% of records)
         recent_records = records[-max(1, len(records) // 4) :]
-        recent_average = mean(record.influence_strength for record in recent_records)
+        recent_average = mean(
+            record.influence_strength for record in recent_records
+        )
 
         return {
             "trend": trend,
@@ -722,7 +766,9 @@ class InfluenceMetricsEngine:
         query = (
             update(Agent)
             .where(Agent.id == agent_id)
-            .values(influence_score=influence_score, updated_at=datetime.utcnow())
+            .values(
+                influence_score=influence_score, updated_at=datetime.utcnow()
+            )
         )
         await session.execute(query)
 
@@ -733,7 +779,9 @@ class InfluenceMetricsEngine:
         query = (
             update(Agent)
             .where(Agent.id == agent_id)
-            .values(reputation_score=reputation_score, updated_at=datetime.utcnow())
+            .values(
+                reputation_score=reputation_score, updated_at=datetime.utcnow()
+            )
         )
         await session.execute(query)
 
@@ -813,7 +861,8 @@ class InfluenceMetricsEngine:
     def _calculate_experience_factor(self, agent: Agent) -> float:
         """Calculate experience factor based on agent age and activity."""
         days_active = (datetime.utcnow() - agent.created_at).days
-        experience_score = min(1.0, days_active / 365.0)  # 1 year = max experience
+        # 1 year = max experience
+        experience_score = min(1.0, days_active / 365.0)
 
         # Combine with total negotiations
         activity_score = min(1.0, agent.total_negotiations / 50.0)
@@ -871,7 +920,9 @@ class InfluenceMetricsEngine:
         logger.info("Influence calculation scheduler started")
         # Background task implementation would go here
 
-    async def get_influence_metrics(self, agent_id: str) -> InfluenceMetricsResponse:
+    async def get_influence_metrics(
+        self, agent_id: str
+    ) -> InfluenceMetricsResponse:
         """Get comprehensive influence metrics."""
         try:
             async with get_database_session() as session:

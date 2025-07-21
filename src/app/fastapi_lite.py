@@ -8,8 +8,7 @@ import inspect
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +57,10 @@ class FastAPILite:
     """Enterprise-grade FastAPI-compatible application framework"""
 
     def __init__(
-        self, title: str = "FastAPI", version: str = "0.1.0", description: str = ""
+        self,
+        title: str = "FastAPI",
+        version: str = "0.1.0",
+        description: str = "",
     ):
         self.title = title
         self.version = version
@@ -155,7 +157,9 @@ class FastAPILite:
                             kwargs[param_name] = body_data
                             break
                 except json.JSONDecodeError:
-                    return Response({"detail": "Invalid JSON"}, status_code=400)
+                    return Response(
+                        {"detail": "Invalid JSON"}, status_code=400
+                    )
 
             # Call the handler
             if asyncio.iscoroutinefunction(handler):
@@ -169,7 +173,9 @@ class FastAPILite:
             return Response({"detail": e.detail}, status_code=e.status_code)
         except Exception as e:
             logger.error(f"Error handling request: {e}")
-            return Response({"detail": "Internal Server Error"}, status_code=500)
+            return Response(
+                {"detail": "Internal Server Error"}, status_code=500
+            )
 
     def _path_matches(self, route_path: str, request_path: str) -> bool:
         """Check if route path matches request path with parameters"""
@@ -211,4 +217,3 @@ app = FastAPILite(
 )
 
 # Import our data store
-from .data_store import data_store

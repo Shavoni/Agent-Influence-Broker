@@ -8,7 +8,7 @@ project architecture and security considerations.
 
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -60,9 +60,13 @@ class SecurityManager:
         self.settings = get_settings()
         self.secret_key = self.settings.SECRET_KEY
         self.algorithm = self.settings.ALGORITHM
-        self.access_token_expire_minutes = self.settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        self.access_token_expire_minutes = (
+            self.settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+    def verify_password(
+        self, plain_password: str, hashed_password: str
+    ) -> bool:
         """
         Verify password against hash with comprehensive error handling.
 
@@ -84,7 +88,9 @@ class SecurityManager:
             return result
         except Exception as e:
             logger.error(f"Password verification error: {e}")
-            log_security_event("password_verification_error", {"error": str(e)}, logger)
+            log_security_event(
+                "password_verification_error", {"error": str(e)}, logger
+            )
             return False
 
     def get_password_hash(self, password: str) -> str:
@@ -203,7 +209,9 @@ class SecurityManager:
 
             if user_id is None:
                 log_security_event(
-                    "token_validation_failed", {"reason": "missing_user_id"}, logger
+                    "token_validation_failed",
+                    {"reason": "missing_user_id"},
+                    logger,
                 )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -387,7 +395,12 @@ def validate_password_strength(password: str) -> Dict[str, Any]:
     Returns:
         Dict containing validation results and suggestions
     """
-    validation = {"is_valid": True, "score": 0, "issues": [], "suggestions": []}
+    validation = {
+        "is_valid": True,
+        "score": 0,
+        "issues": [],
+        "suggestions": [],
+    }
 
     # Length check
     if len(password) < 8:

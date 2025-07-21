@@ -75,23 +75,33 @@ class AppImportError(ApplicationError):
 
 class BusinessLogicError(ApplicationError):
     """Exception for business logic violations."""
-    
+
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
         super().__init__(message, "BUSINESS_LOGIC_ERROR", details)
 
 
 class NotFoundError(ApplicationError):
     """Exception for resource not found errors."""
-    
-    def __init__(self, resource: str, identifier: str, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        resource: str,
+        identifier: str,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         message = f"{resource} with identifier '{identifier}' not found"
         super().__init__(message, "NOT_FOUND_ERROR", details)
 
 
 class ValidationError(ApplicationError):
     """Exception for data validation errors."""
-    
-    def __init__(self, message: str, field: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        message: str,
+        field: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         error_details = details or {}
         if field:
             error_details["field"] = field
@@ -177,6 +187,8 @@ def print_diagnostic_info(error: Exception, component: str) -> None:
 
     # Get error details without f-string issues
     if hasattr(error, "__cause__") and error.__cause__:
-        print(f"Caused by: {type(error.__cause__).__name__}: {str(error.__cause__)}")
+        print(
+            f"Caused by: {type(error.__cause__).__name__}: {str(error.__cause__)}"
+        )
 
     print("=" * 60)

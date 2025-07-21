@@ -6,14 +6,12 @@ negotiation protocols, proposal handling, and state management following
 FastAPI best practices with async/await patterns.
 """
 
-from typing import List, Optional
-from uuid import UUID
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
 
 from app.core.logging import get_logger
-from app.core.security import get_current_user_token, require_role
+from app.core.security import get_current_user_token
 from app.schemas.negotiation import (
     NegotiationCreateRequest,
     NegotiationListResponse,

@@ -13,4 +13,5 @@ def get_agents():
     return supabase.table("agents").select("*").execute()
 
 
-# Add more CRUD and analytics functions as needed for agents, negotiations, transactions, webhooks, influence_metrics
+# Add more CRUD and analytics functions as needed for agents,
+# negotiations, transactions, webhooks, influence_metrics

@@ -15,12 +15,12 @@ try:
     from . import influence
 except ImportError:
     influence = None
-    
+
 try:
     from . import negotiations
 except ImportError:
     negotiations = None
-    
+
 try:
     from . import transactions
 except ImportError:

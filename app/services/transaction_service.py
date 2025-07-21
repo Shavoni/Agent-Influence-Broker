@@ -6,36 +6,24 @@ escrow management, fee calculation, and audit trails following project
 architecture with async/await patterns and comprehensive error handling.
 """
 
-import asyncio
 import hashlib
 import secrets
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, desc, func, or_, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy import func, select
 
 from app.core.config import get_settings
 from app.core.database import get_database_session
-from app.core.logging import get_logger, log_security_event
-from app.models.agent import Agent
-from app.models.negotiation import Negotiation
-from app.models.transaction import (
-    EscrowAccount,
-    EscrowStatus,
-    PaymentMethod,
-    Transaction,
-    TransactionLog,
-    TransactionStatus,
-    TransactionType,
-)
+from app.core.logging import get_logger
+from app.models.transaction import EscrowStatus, Transaction, TransactionStatus
 from app.schemas.transaction import (
     TransactionCreateRequest,
     TransactionResponse,
 )
+
 # TODO: Add these schemas when needed
 # EscrowCreateRequest,
 # EscrowResponse,
@@ -61,7 +49,9 @@ class TransactionEngine:
         self.min_transaction_amount = Decimal("0.01")  # $0.01 minimum
 
     async def create_transaction(
-        self, transaction_data: TransactionCreateRequest, initiator_user_id: str
+        self,
+        transaction_data: TransactionCreateRequest,
+        initiator_user_id: str,
     ) -> TransactionResponse:
         """
         Create new transaction with comprehensive validation and escrow setup.
@@ -116,7 +106,9 @@ class TransactionEngine:
                     escrow_status=EscrowStatus.CREATED.value,
                     hash_signature=hash_signature,
                     description=transaction_data.description,
-                    metadata=self._serialize_metadata(transaction_data.metadata),
+                    metadata=self._serialize_metadata(
+                        transaction_data.metadata
+                    ),
                     expires_at=datetime.utcnow()
                     + timedelta(hours=transaction_data.expires_in_hours),
                     created_at=datetime.utcnow(),
@@ -316,13 +308,20 @@ class TransactionEngine:
 
                 await session.commit()
 
-                # Update agent reputation scores based on successful transaction
-                await self._update_agent_reputation_from_transaction(transaction)
+                # Update agent reputation scores based on successful
+                # transaction
+                await self._update_agent_reputation_from_transaction(
+                    transaction
+                )
 
                 # Trigger completion webhooks
-                await self._trigger_transaction_webhooks(transaction, "completed")
+                await self._trigger_transaction_webhooks(
+                    transaction, "completed"
+                )
 
-                logger.info(f"Escrow released for transaction: {transaction_id}")
+                logger.info(
+                    f"Escrow released for transaction: {transaction_id}"
+                )
 
                 return await self._convert_to_response(session, transaction)
 
@@ -340,9 +339,9 @@ class TransactionEngine:
     def _calculate_fees(self, amount: Decimal) -> Dict[str, Decimal]:
         """Calculate transaction fees with proper decimal precision."""
 
-        platform_fee = (amount * Decimal(str(self.platform_fee_rate))).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
+        platform_fee = (
+            amount * Decimal(str(self.platform_fee_rate))
+        ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         processing_fee = self.processing_fee_flat
 
@@ -430,7 +429,12 @@ class TransactionEngine:
             logger.error(f"Failed to list user transactions: {e}")
             return []
 
-    # Additional helper methods for escrow, payment processing, etc. would continue here...
+    # Additional helper methods for escrow, payment processing, etc. would
+    # continue here...
+
 
 # Global transaction engine instance
 transaction_engine = TransactionEngine()
+
+# Alias for compatibility with API endpoints
+TransactionService = TransactionEngine

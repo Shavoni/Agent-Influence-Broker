@@ -5,7 +5,6 @@ Pure Python implementation without external dependencies
 
 import json
 import logging
-import uuid
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Dict, Optional
@@ -29,7 +28,9 @@ class AgentBrokerHandler(BaseHTTPRequestHandler):
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header(
+            "Access-Control-Allow-Headers", "Content-Type, Authorization"
+        )
         self.end_headers()
 
     def _send_json_response(self, data: Dict[str, Any], status=200):

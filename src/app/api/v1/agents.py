@@ -2,24 +2,35 @@
 Agent API routes
 """
 
+import uuid
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-import uuid
 
 from ..core.database import get_db_session
 from ..core.security import get_current_active_user, require_user
 from ..schemas.agents import (
-    AgentCreate, AgentUpdate, AgentResponse, AgentSummary, 
-    AgentListResponse, AgentSearchFilters, AgentStats
-):
-from ..services.agent_service import AgentService
-from ..core.exceptions import agent_not_found_http
+    AgentCreate,
+    AgentListResponse,
+    AgentResponse,
+    AgentSearchFilters,
+    AgentService,
+    AgentStats,
+    AgentSummary,
+    AgentUpdate,
+    APIRouter,
+    ..core.exceptions,
+    ..services.agent_service,
+    :,
+    =,
+    agent_not_found_http,
+    from,
+    import,
+    router,
+)
 
 
-router = APIRouter()
-
-  
 @router.post(
     "/",
     response_model=AgentResponse,
@@ -37,7 +48,8 @@ async def create_agent(
         current_user["user_id"]
     )
     return agent
-  
+
+
 @router.get(
     "/",
     response_model=AgentListResponse
@@ -60,14 +72,14 @@ async def list_agents(
     db: AsyncSession = Depends(get_db_session)
 ) -> AgentListResponse:
     """List agents with optional filtering"""
-    
+
     filters = AgentSearchFilters(
         agent_type=agent_type,
         is_active=is_active,
         is_verified=is_verified,
         min_reputation=min_reputation
     )
-    
+
     agent_service = AgentService(db)
     result = await agent_service.list_agents(
         page=page,
@@ -77,6 +89,7 @@ async def list_agents(
     return result
 
 list_agents.__annotations__["return"] = AgentListResponse
+
 
 @router.get(
     "/my",
@@ -93,6 +106,7 @@ async def get_my_agents(
 
 get_my_agents.__annotations__["return"] = List[AgentSummary]
 
+
 @router.get(
     "/{agent_id}",
     response_model=AgentResponse
@@ -104,10 +118,10 @@ async def get_agent(
     """Get agent by ID"""
     agent_service = AgentService(db)
     agent = await agent_service.get_agent_by_id(agent_id)
-    
+
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     return agent
 
 
@@ -123,18 +137,18 @@ async def update_agent(
 ):
     """Update agent"""
     agent_service = AgentService(db)
-    
+
     # Check ownership
     agent = await agent_service.get_agent_by_id(agent_id)
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     if agent.owner_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to update this agent"
         )
-    
+
     updated_agent = await agent_service.update_agent(agent_id, agent_data)
     return updated_agent
 
@@ -150,22 +164,21 @@ async def delete_agent(
 ):
     """Delete agent (soft delete - deactivate)"""
     agent_service = AgentService(db)
-    
+
     # Check ownership
     agent = await agent_service.get_agent_by_id(agent_id)
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     if agent.owner_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to delete this agent"
         )
-    
+
     await agent_service.deactivate_agent(agent_id)
 
 
-  
 @router.get(
     "/{agent_id}/stats",
     response_model=AgentStats
@@ -177,10 +190,10 @@ async def get_agent_stats(
     """Get agent statistics"""
     agent_service = AgentService(db)
     agent = await agent_service.get_agent_by_id(agent_id)
-    
+
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     stats = await agent_service.get_agent_stats(agent_id)
     return stats
 
@@ -196,10 +209,10 @@ async def verify_agent(
     """Verify an agent (admin only in production)"""
     agent_service = AgentService(db)
     agent = await agent_service.get_agent_by_id(agent_id)
-    
+
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     await agent_service.verify_agent(agent_id)
     return {"message": "Agent verified successfully"}
 
@@ -213,15 +226,15 @@ async def activate_agent(
     """Activate an agent"""
     agent_service = AgentService(db)
     agent = await agent_service.get_agent_by_id(agent_id)
-    
+
     if not agent:
         raise agent_not_found_http(str(agent_id))
-    
+
     if agent.owner_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to activate this agent"
         )
-    
+
     await agent_service.activate_agent(agent_id)
     return {"message": "Agent activated successfully"}

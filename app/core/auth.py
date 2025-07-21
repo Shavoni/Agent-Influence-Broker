@@ -8,9 +8,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import jwt
 from pydantic import BaseModel
 
 from app.core.config import get_settings
@@ -69,7 +69,9 @@ def create_access_token(user_id: str, email: str) -> str:
         "type": "access",
     }
 
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(
+        payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
 
 
 def verify_token(token: str) -> Optional[TokenData]:
@@ -221,7 +223,8 @@ def require_roles(required_roles: list[str]):
     ) -> User:
         if not any(role in current_user.roles for role in required_roles):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
             )
         return current_user
 

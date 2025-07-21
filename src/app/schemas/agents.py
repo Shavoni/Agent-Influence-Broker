@@ -72,7 +72,8 @@ class AgentCreateRequest(BaseModel):
         None, max_length=1000, description="Agent description and purpose"
     )
     capabilities: List[AgentCapability] = Field(
-        default_factory=list, description="Agent capabilities and proficiencies"
+        default_factory=list,
+        description="Agent capabilities and proficiencies",
     )
     specializations: List[AgentSpecialization] = Field(
         default_factory=list, description="Agent specialization domains"
@@ -81,13 +82,16 @@ class AgentCreateRequest(BaseModel):
         default=ExperienceLevel.NOVICE, description="Overall experience level"
     )
     negotiation_style: NegotiationStyle = Field(
-        default=NegotiationStyle.BALANCED, description="Default negotiation approach"
+        default=NegotiationStyle.BALANCED,
+        description="Default negotiation approach",
     )
     max_concurrent_negotiations: int = Field(
         default=5, ge=1, le=50, description="Maximum simultaneous negotiations"
     )
     min_transaction_value: float = Field(
-        default=0.01, ge=0.0, description="Minimum acceptable transaction value"
+        default=0.01,
+        ge=0.0,
+        description="Minimum acceptable transaction value",
     )
     max_transaction_value: float = Field(
         default=1000.0, ge=0.01, description="Maximum transaction value limit"
@@ -103,7 +107,7 @@ class AgentCreateRequest(BaseModel):
             raise ValueError("Agent name contains invalid characters")
         return v.strip()
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_transaction_values(self):
         """Validate transaction value constraints."""
         min_val = self.min_transaction_value

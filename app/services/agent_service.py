@@ -6,15 +6,13 @@ validation, and database operations following project architecture
 with async/await patterns and error handling.
 """
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 from uuid import uuid4
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.database import get_database_session
 from app.core.logging import get_logger, log_security_event
@@ -23,7 +21,6 @@ from app.models.user import User
 from app.schemas.agent import (
     AgentCreateRequest,
     AgentListResponse,
-    AgentMetrics,
     AgentResponse,
     AgentSearchRequest,
     AgentStatus,
@@ -59,7 +56,7 @@ class AgentService:
         try:
             async with get_database_session() as session:
                 # Verify owner exists and check agent limits
-                owner = await self._verify_owner_and_limits(session, owner_id)
+                await self._verify_owner_and_limits(session, owner_id)
 
                 # Create agent instance
                 agent = Agent(
@@ -67,7 +64,9 @@ class AgentService:
                     name=agent_data.name,
                     description=agent_data.description,
                     owner_id=owner_id,
-                    capabilities=self._serialize_capabilities(agent_data.capabilities),
+                    capabilities=self._serialize_capabilities(
+                        agent_data.capabilities
+                    ),
                     specializations=self._serialize_specializations(
                         agent_data.specializations
                     ),
@@ -129,7 +128,8 @@ class AgentService:
 
                 if not agent:
                     raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Agent not found",
                     )
 
                 # Check access permissions
@@ -146,7 +146,8 @@ class AgentService:
                         logger,
                     )
                     raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied",
                     )
 
                 return await self._convert_to_response(agent)
@@ -186,7 +187,8 @@ class AgentService:
 
                 if not agent:
                     raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Agent not found",
                     )
 
                 # Verify ownership
@@ -201,7 +203,8 @@ class AgentService:
                         logger,
                     )
                     raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied",
                     )
 
                 # Apply updates
@@ -215,27 +218,31 @@ class AgentService:
                         agent_data.capabilities
                     )
                 if agent_data.specializations is not None:
-                    update_data["specializations"] = self._serialize_specializations(
+                    update_data[
+                        "specializations"
+                    ] = self._serialize_specializations(
                         agent_data.specializations
                     )
                 if agent_data.experience_level is not None:
-                    update_data["experience_level"] = agent_data.experience_level.value
+                    update_data[
+                        "experience_level"
+                    ] = agent_data.experience_level.value
                 if agent_data.negotiation_style is not None:
-                    update_data["negotiation_style"] = (
-                        agent_data.negotiation_style.value
-                    )
+                    update_data[
+                        "negotiation_style"
+                    ] = agent_data.negotiation_style.value
                 if agent_data.max_concurrent_negotiations is not None:
-                    update_data["max_concurrent_negotiations"] = (
-                        agent_data.max_concurrent_negotiations
-                    )
+                    update_data[
+                        "max_concurrent_negotiations"
+                    ] = agent_data.max_concurrent_negotiations
                 if agent_data.min_transaction_value is not None:
-                    update_data["min_transaction_value"] = (
-                        agent_data.min_transaction_value
-                    )
+                    update_data[
+                        "min_transaction_value"
+                    ] = agent_data.min_transaction_value
                 if agent_data.max_transaction_value is not None:
-                    update_data["max_transaction_value"] = (
-                        agent_data.max_transaction_value
-                    )
+                    update_data[
+                        "max_transaction_value"
+                    ] = agent_data.max_transaction_value
                 if agent_data.is_available is not None:
                     update_data["is_available"] = agent_data.is_available
 
@@ -244,7 +251,9 @@ class AgentService:
 
                     # Execute update
                     query = (
-                        update(Agent).where(Agent.id == agent_id).values(**update_data)
+                        update(Agent)
+                        .where(Agent.id == agent_id)
+                        .values(**update_data)
                     )
                     await session.execute(query)
                     await session.commit()
@@ -287,12 +296,16 @@ class AgentService:
                 query = await self._apply_search_filters(query, search_params)
 
                 # Get total count
-                count_query = select(func.count()).select_from(query.subquery())
+                count_query = select(func.count()).select_from(
+                    query.subquery()
+                )
                 total_result = await session.execute(count_query)
                 total_count = total_result.scalar()
 
                 # Apply pagination and sorting
-                query = self._apply_pagination_and_sorting(query, search_params)
+                query = self._apply_pagination_and_sorting(
+                    query, search_params
+                )
 
                 # Execute query
                 result = await session.execute(query)
@@ -301,7 +314,9 @@ class AgentService:
                 # Convert to response models
                 agent_responses = []
                 for agent in agents:
-                    agent_responses.append(await self._convert_to_response(agent))
+                    agent_responses.append(
+                        await self._convert_to_response(agent)
+                    )
 
                 # Calculate pagination metadata
                 total_pages = (
@@ -327,7 +342,9 @@ class AgentService:
                 detail="Failed to list agents",
             )
 
-    async def delete_agent(self, agent_id: str, user_id: str) -> Dict[str, str]:
+    async def delete_agent(
+        self, agent_id: str, user_id: str
+    ) -> Dict[str, str]:
         """
         Delete agent with comprehensive validation and cleanup.
 
@@ -367,7 +384,10 @@ class AgentService:
 
                 logger.info(f"Agent deleted successfully: {agent_id}")
 
-                return {"message": "Agent deleted successfully", "agent_id": agent_id}
+                return {
+                    "message": "Agent deleted successfully",
+                    "agent_id": agent_id,
+                }
 
         except HTTPException:
             raise
@@ -405,7 +425,9 @@ class AgentService:
             )
 
         # Check agent limit
-        agent_count_query = select(func.count()).where(Agent.owner_id == owner_id)
+        agent_count_query = select(func.count()).where(
+            Agent.owner_id == owner_id
+        )
         count_result = await session.execute(agent_count_query)
         current_count = count_result.scalar()
 
@@ -434,13 +456,17 @@ class AgentService:
         import json
 
         # Deserialize JSON fields
-        capabilities = json.loads(agent.capabilities) if agent.capabilities else []
+        capabilities = (
+            json.loads(agent.capabilities) if agent.capabilities else []
+        )
         specializations = (
             json.loads(agent.specializations) if agent.specializations else []
         )
 
         # Calculate reputation tier
-        reputation_tier = self._calculate_reputation_tier(agent.reputation_score)
+        reputation_tier = self._calculate_reputation_tier(
+            agent.reputation_score
+        )
 
         return AgentResponse(
             id=agent.id,
@@ -481,7 +507,9 @@ class AgentService:
         else:
             return "novice"
 
-    async def _apply_search_filters(self, query, search_params: AgentSearchRequest):
+    async def _apply_search_filters(
+        self, query, search_params: AgentSearchRequest
+    ):
         """Apply search filters to query."""
         # Text search
         if search_params.query:
@@ -499,17 +527,23 @@ class AgentService:
 
         # Reputation range
         if search_params.min_reputation is not None:
-            query = query.where(Agent.reputation_score >= search_params.min_reputation)
+            query = query.where(
+                Agent.reputation_score >= search_params.min_reputation
+            )
         if search_params.max_reputation is not None:
-            query = query.where(Agent.reputation_score <= search_params.max_reputation)
+            query = query.where(
+                Agent.reputation_score <= search_params.max_reputation
+            )
 
         # Availability filter
         if search_params.available_only:
-            query = query.where(Agent.is_available == True)
+            query = query.where(Agent.is_available)
 
         return query
 
-    def _apply_pagination_and_sorting(self, query, search_params: AgentSearchRequest):
+    def _apply_pagination_and_sorting(
+        self, query, search_params: AgentSearchRequest
+    ):
         """Apply pagination and sorting to query."""
         # Sorting
         sort_column = getattr(Agent, search_params.sort_by, Agent.created_at)

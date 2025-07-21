@@ -2,15 +2,16 @@
 Agent schemas using dataclasses for Python 3.14 compatibility
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class AgentCapability:
     """Agent capability definition"""
+
     name: str
     description: str
     parameters: Dict[str, Any] = field(default_factory=dict)
@@ -19,6 +20,7 @@ class AgentCapability:
 @dataclass
 class AgentCreate:
     """Schema for creating a new agent"""
+
     name: str
     description: Optional[str]
     agent_type: str
@@ -32,15 +34,22 @@ class AgentCreate:
         # Validation
         if not self.name or len(self.name) > 255:
             raise ValueError("Name must be 1-255 characters")
-        
-        allowed_types = ['trading', 'negotiation', 'influence', 'service', 'analytics']
+
+        allowed_types = [
+            "trading",
+            "negotiation",
+            "influence",
+            "service",
+            "analytics",
+        ]
         if self.agent_type not in allowed_types:
-            raise ValueError(f'Agent type must be one of: {allowed_types}')
+            raise ValueError(f"Agent type must be one of: {allowed_types}")
 
 
 @dataclass
 class AgentUpdate:
     """Schema for updating an agent"""
+
     name: Optional[str] = None
     description: Optional[str] = None
     capabilities: Optional[List[AgentCapability]] = None
@@ -53,6 +62,7 @@ class AgentUpdate:
 @dataclass
 class AgentResponse:
     """Schema for agent response"""
+
     id: uuid.UUID
     name: str
     description: Optional[str]
@@ -77,6 +87,7 @@ class AgentResponse:
 @dataclass
 class AgentSummary:
     """Compact agent summary schema"""
+
     id: uuid.UUID
     name: str
     agent_type: str
@@ -89,6 +100,7 @@ class AgentSummary:
 @dataclass
 class AgentStats:
     """Agent statistics schema"""
+
     total_negotiations: int
     successful_negotiations: int
     success_rate: float
@@ -103,6 +115,7 @@ class AgentStats:
 @dataclass
 class AgentListResponse:
     """Schema for paginated agent list response"""
+
     agents: List[AgentSummary]
     total: int
     page: int
@@ -113,6 +126,7 @@ class AgentListResponse:
 @dataclass
 class AgentSearchFilters:
     """Schema for agent search filters"""
+
     agent_type: Optional[str] = None
     min_reputation: Optional[float] = None
     max_reputation: Optional[float] = None

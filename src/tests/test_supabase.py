@@ -1,15 +1,15 @@
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 import pytest
 
 from app.core.exceptions import DatabaseError, NotFoundError
 from app.database.supabase import SupabaseClient
-from app.models.agent import Agent, AgentCreate, AgentUpdate
-from app.models.negotiation import Negotiation, NegotiationCreate
-from app.models.transaction import Transaction, TransactionCreate
+from app.models.agent import AgentCreate, AgentUpdate
+from app.models.negotiation import NegotiationCreate
+from app.models.transaction import TransactionCreate
 
 
 class TestSupabaseClient:
@@ -65,9 +65,13 @@ class TestAgentOperations:
     ):
         """Test successful agent creation."""
         # Arrange
-        mock_supabase.table().insert().execute.return_value.data = [sample_agent_data]
+        mock_supabase.table().insert().execute.return_value.data = [
+            sample_agent_data
+        ]
         agent_create = AgentCreate(
-            name="TestAgent", description="A test agent", capabilities=["negotiation"]
+            name="TestAgent",
+            description="A test agent",
+            capabilities=["negotiation"],
         )
 
         # Act
@@ -79,7 +83,9 @@ class TestAgentOperations:
         mock_supabase.table.assert_called_with("agents")
 
     @pytest.mark.asyncio
-    async def test_create_agent_database_error(self, supabase_client, mock_supabase):
+    async def test_create_agent_database_error(
+        self, supabase_client, mock_supabase
+    ):
         """Test agent creation with database error."""
         # Arrange
         mock_supabase.table().insert().execute.side_effect = Exception(
@@ -112,7 +118,9 @@ class TestAgentOperations:
         mock_supabase.table().select().eq.assert_called_with("id", "agent-123")
 
     @pytest.mark.asyncio
-    async def test_get_agent_by_id_not_found(self, supabase_client, mock_supabase):
+    async def test_get_agent_by_id_not_found(
+        self, supabase_client, mock_supabase
+    ):
         """Test agent retrieval when agent doesn't exist."""
         # Arrange
         mock_supabase.table().select().eq().execute.return_value.data = []
@@ -128,7 +136,9 @@ class TestAgentOperations:
         """Test successful agent update."""
         # Arrange
         updated_data = {**sample_agent_data, "reputation_score": 90.0}
-        mock_supabase.table().update().eq().execute.return_value.data = [updated_data]
+        mock_supabase.table().update().eq().execute.return_value.data = [
+            updated_data
+        ]
 
         agent_update = AgentUpdate(reputation_score=90.0)
 
@@ -184,7 +194,9 @@ class TestNegotiationOperations:
             sample_negotiation_data
         ]
         negotiation_create = NegotiationCreate(
-            initiator_id="agent-123", respondent_id="agent-456", terms={"price": 1000}
+            initiator_id="agent-123",
+            respondent_id="agent-456",
+            terms={"price": 1000},
         )
 
         # Act
@@ -219,21 +231,29 @@ class TestNegotiationOperations:
         """Test updating negotiation status."""
         # Arrange
         updated_data = {**sample_negotiation_data, "status": "completed"}
-        mock_supabase.table().update().eq().execute.return_value.data = [updated_data]
+        mock_supabase.table().update().eq().execute.return_value.data = [
+            updated_data
+        ]
 
         # Act
-        result = await supabase_client.update_negotiation_status("neg-123", "completed")
+        result = await supabase_client.update_negotiation_status(
+            "neg-123", "completed"
+        )
 
         # Assert
         assert result.status == "completed"
-        mock_supabase.table().update.assert_called_with({"status": "completed"})
+        mock_supabase.table().update.assert_called_with(
+            {"status": "completed"}
+        )
 
 
 class TestTransactionOperations:
     """Test transaction-related database operations."""
 
     @pytest.mark.asyncio
-    async def test_create_transaction_success(self, supabase_client, mock_supabase):
+    async def test_create_transaction_success(
+        self, supabase_client, mock_supabase
+    ):
         """Test successful transaction creation."""
         # Arrange
         transaction_data = {
@@ -244,7 +264,9 @@ class TestTransactionOperations:
             "status": "pending",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        mock_supabase.table().insert().execute.return_value.data = [transaction_data]
+        mock_supabase.table().insert().execute.return_value.data = [
+            transaction_data
+        ]
 
         transaction_create = TransactionCreate(
             from_agent_id="agent-123", to_agent_id="agent-456", amount=1000.0
@@ -259,7 +281,9 @@ class TestTransactionOperations:
         assert result.status == "pending"
 
     @pytest.mark.asyncio
-    async def test_get_agent_transactions(self, supabase_client, mock_supabase):
+    async def test_get_agent_transactions(
+        self, supabase_client, mock_supabase
+    ):
         """Test retrieving transactions for an agent."""
         # Arrange
         transaction_data = {
@@ -308,12 +332,22 @@ class TestInfluenceMetrics:
         assert result["average_deal_value"] == 5000.0
 
     @pytest.mark.asyncio
-    async def test_get_top_influential_agents(self, supabase_client, mock_supabase):
+    async def test_get_top_influential_agents(
+        self, supabase_client, mock_supabase
+    ):
         """Test retrieving top influential agents."""
         # Arrange
         top_agents_data = [
-            {"agent_id": "agent-123", "influence_score": 95.5, "name": "TopAgent1"},
-            {"agent_id": "agent-456", "influence_score": 92.0, "name": "TopAgent2"},
+            {
+                "agent_id": "agent-123",
+                "influence_score": 95.5,
+                "name": "TopAgent1",
+            },
+            {
+                "agent_id": "agent-456",
+                "influence_score": 92.0,
+                "name": "TopAgent2",
+            },
         ]
         mock_supabase.table().select().order().limit().execute.return_value.data = (
             top_agents_data
@@ -332,7 +366,9 @@ class TestConnectionAndErrorHandling:
     """Test database connection and error handling."""
 
     @pytest.mark.asyncio
-    async def test_connection_health_check(self, supabase_client, mock_supabase):
+    async def test_connection_health_check(
+        self, supabase_client, mock_supabase
+    ):
         """Test database connection health check."""
         # Arrange
         mock_supabase.table().select().limit().execute.return_value.data = []
@@ -352,11 +388,15 @@ class TestConnectionAndErrorHandling:
         )
 
         # Act & Assert
-        with pytest.raises(DatabaseError, match="Database health check failed"):
+        with pytest.raises(
+            DatabaseError, match="Database health check failed"
+        ):
             await supabase_client.health_check()
 
     @pytest.mark.asyncio
-    async def test_transaction_rollback_on_error(self, supabase_client, mock_supabase):
+    async def test_transaction_rollback_on_error(
+        self, supabase_client, mock_supabase
+    ):
         """Test transaction rollback on error."""
         # Arrange
         mock_supabase.table().insert().execute.side_effect = Exception(
@@ -366,7 +406,9 @@ class TestConnectionAndErrorHandling:
         # Act & Assert
         with pytest.raises(DatabaseError):
             await supabase_client.create_agent(
-                AgentCreate(name="TestAgent", description="Test", capabilities=[])
+                AgentCreate(
+                    name="TestAgent", description="Test", capabilities=[]
+                )
             )
 
 
@@ -384,13 +426,17 @@ class TestRowLevelSecurity:
         ]
 
         # Act
-        result = await supabase_client.get_agent_by_id("agent-123", user_id="user-123")
+        result = await supabase_client.get_agent_by_id(
+            "agent-123", user_id="user-123"
+        )
 
         # Assert
         assert result.id == "agent-123"
 
     @pytest.mark.asyncio
-    async def test_unauthorized_agent_access(self, supabase_client, mock_supabase):
+    async def test_unauthorized_agent_access(
+        self, supabase_client, mock_supabase
+    ):
         """Test unauthorized agent access blocked by RLS."""
         # Arrange
         mock_supabase.table().select().eq().execute.return_value.data = []
@@ -436,10 +482,14 @@ class TestPerformance:
         ).total_seconds() < 5.0  # Should complete within 5 seconds
 
     @pytest.mark.asyncio
-    async def test_concurrent_negotiations(self, supabase_client, mock_supabase):
+    async def test_concurrent_negotiations(
+        self, supabase_client, mock_supabase
+    ):
         """Test handling concurrent negotiation operations."""
         # Arrange
-        mock_supabase.table().insert().execute.return_value.data = [{"id": "neg-123"}]
+        mock_supabase.table().insert().execute.return_value.data = [
+            {"id": "neg-123"}
+        ]
 
         # Act
         tasks = []
@@ -456,5 +506,7 @@ class TestPerformance:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Assert
-        successful_results = [r for r in results if not isinstance(r, Exception)]
+        successful_results = [
+            r for r in results if not isinstance(r, Exception)
+        ]
         assert len(successful_results) > 0  # At least some should succeed

@@ -457,6 +457,22 @@
                         Check Health
                     </button>
                 </div>
+
+                <div class="card" id="transparency-dashboard-card">
+                    <h3>🔍 Transparency Dashboard</h3>
+                    <p>Complete visibility into AI agent operations, compliance, and audit trails.</p>
+
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/api/v1/transparency/metrics
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>/api/v1/transparency/audit-trail
+                    </div>
+
+                    <button class="btn" onclick="openTransparencyDashboard()">
+                        Open Transparency Dashboard
+                    </button>
+                </div>
             </div>
 
             <div class="response-area" id="api-response-area">
@@ -617,6 +633,10 @@
 
             function loadHealth() {
                 makeRequest('/health')
+            }
+
+            function openTransparencyDashboard() {
+                window.open('transparency-dashboard.html', '_blank')
             }
 
             // Load savings data on page load and refresh every 10 seconds

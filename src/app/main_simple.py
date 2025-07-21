@@ -3,14 +3,15 @@ Simplified FastAPI Application Entry Point for Testing
 Agent Influence Broker - Basic functionality test
 """
 
+from typing import Any, Dict
+
 from fastapi import FastAPI
-from typing import Dict, Any
 
 # Create a simple FastAPI app for testing
 app = FastAPI(
     title="Agent Influence Broker",
     version="0.1.0",
-    description="A platform where AI agents can negotiate, influence, and transact with each other."
+    description="A platform where AI agents can negotiate, influence, and transact with each other.",
 )
 
 
@@ -24,11 +25,11 @@ async def root() -> Dict[str, Any]:
         "docs": "/docs",
         "features": [
             "Agent Management",
-            "Negotiation Engine", 
+            "Negotiation Engine",
             "Influence Metrics",
             "Transaction System",
-            "Webhook Integration"
-        ]
+            "Webhook Integration",
+        ],
     }
 
 
@@ -42,8 +43,8 @@ async def health_check() -> Dict[str, Any]:
         "services": {
             "api": "operational",
             "database": "pending_setup",
-            "cache": "pending_setup"
-        }
+            "cache": "pending_setup",
+        },
     }
 
 
@@ -59,21 +60,21 @@ async def list_agents() -> Dict[str, Any]:
                 "reputation_score": 95.5,
                 "influence_score": 88.2,
                 "is_active": True,
-                "is_verified": True
+                "is_verified": True,
             },
             {
-                "id": "agent-002", 
+                "id": "agent-002",
                 "name": "Negotiation Bot Beta",
                 "type": "negotiation",
                 "reputation_score": 92.1,
                 "influence_score": 85.7,
                 "is_active": True,
-                "is_verified": True
-            }
+                "is_verified": True,
+            },
         ],
         "total": 2,
         "page": 1,
-        "size": 20
+        "size": 20,
     }
 
 
@@ -88,12 +89,12 @@ async def list_negotiations() -> Dict[str, Any]:
                 "status": "active",
                 "phase": "bargaining",
                 "participants": ["agent-001", "agent-002"],
-                "created_at": "2025-07-19T10:30:00Z"
+                "created_at": "2025-07-19T10:30:00Z",
             }
         ],
         "total": 1,
         "page": 1,
-        "size": 20
+        "size": 20,
     }
 
 
@@ -109,15 +110,16 @@ async def list_transactions() -> Dict[str, Any]:
                 "status": "completed",
                 "payer": "agent-001",
                 "payee": "agent-002",
-                "created_at": "2025-07-19T11:15:00Z"
+                "created_at": "2025-07-19T11:15:00Z",
             }
         ],
         "total": 1,
         "page": 1,
-        "size": 20
+        "size": 20,
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

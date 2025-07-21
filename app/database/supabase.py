@@ -90,7 +90,10 @@ class SupabaseClient:
                     owner_id="mock-user-123",
                     status="active",
                     reputation_score=75.0,
-                    capabilities=[AgentCapability.TRADING, AgentCapability.ANALYTICS],
+                    capabilities=[
+                        AgentCapability.TRADING,
+                        AgentCapability.ANALYTICS,
+                    ],
                     personality=AgentPersonality(),
                     current_balance=1000.00,
                     max_transaction_amount=10000.00,
@@ -118,7 +121,9 @@ class SupabaseClient:
             mock_agents = []
             if filters.get("owner_id") == "mock-user-123":
                 for i in range(min(3, limit)):
-                    mock_agents.append(await self.get_agent_by_id(f"mock-agent-{i+1}"))
+                    mock_agents.append(
+                        await self.get_agent_by_id(f"mock-agent-{i+1}")
+                    )
 
             return mock_agents[skip : skip + limit]
 
@@ -126,7 +131,9 @@ class SupabaseClient:
             logger.error(f"Failed to get agents with filters: {e}")
             raise DatabaseError(f"Agent query failed: {str(e)}")
 
-    async def update_agent(self, agent_id: str, update_data: Dict[str, Any]) -> Agent:
+    async def update_agent(
+        self, agent_id: str, update_data: Dict[str, Any]
+    ) -> Agent:
         """Update agent in database."""
         try:
             await asyncio.sleep(0.01)
@@ -146,17 +153,12 @@ class SupabaseClient:
 
     # Transaction operations
 
-    async def create_transaction(self, transaction_data: Dict[str, Any]) -> Transaction:
+    async def create_transaction(
+        self, transaction_data: Dict[str, Any]
+    ) -> Transaction:
         """Create transaction in database."""
         try:
             await asyncio.sleep(0.01)
-
-            from app.models.transaction import (
-                Currency,
-                TransactionFees,
-                TransactionStatus,
-                TransactionType,
-            )
 
             mock_transaction_data = {
                 **transaction_data,
@@ -222,12 +224,16 @@ class SupabaseClient:
             mock_transactions = []
             for i in range(min(5, limit)):
                 txn_id = f"txn-{agent_id}-{i+1}"
-                mock_transactions.append(await self.get_transaction_by_id(txn_id))
+                mock_transactions.append(
+                    await self.get_transaction_by_id(txn_id)
+                )
 
             return mock_transactions[skip : skip + limit]
 
         except Exception as e:
-            logger.error(f"Failed to get transactions for agent {agent_id}: {e}")
+            logger.error(
+                f"Failed to get transactions for agent {agent_id}: {e}"
+            )
             raise DatabaseError(f"Transaction query failed: {str(e)}")
 
     async def update_transaction(
@@ -252,17 +258,12 @@ class SupabaseClient:
 
     # Negotiation operations
 
-    async def create_negotiation(self, negotiation_data: Dict[str, Any]) -> Negotiation:
+    async def create_negotiation(
+        self, negotiation_data: Dict[str, Any]
+    ) -> Negotiation:
         """Create negotiation in database."""
         try:
             await asyncio.sleep(0.01)
-
-            from app.models.negotiation import (
-                NegotiationPriority,
-                NegotiationProtocol,
-                NegotiationStatus,
-                NegotiationTerms,
-            )
 
             mock_negotiation_data = {
                 **negotiation_data,
@@ -330,12 +331,16 @@ class SupabaseClient:
             mock_negotiations = []
             for i in range(min(3, limit)):
                 neg_id = f"neg-{agent_id}-{i+1}"
-                mock_negotiations.append(await self.get_negotiation_by_id(neg_id))
+                mock_negotiations.append(
+                    await self.get_negotiation_by_id(neg_id)
+                )
 
             return mock_negotiations[skip : skip + limit]
 
         except Exception as e:
-            logger.error(f"Failed to get negotiations for agent {agent_id}: {e}")
+            logger.error(
+                f"Failed to get negotiations for agent {agent_id}: {e}"
+            )
             raise DatabaseError(f"Negotiation query failed: {str(e)}")
 
     async def update_negotiation(

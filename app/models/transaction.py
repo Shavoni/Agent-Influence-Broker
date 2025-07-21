@@ -8,22 +8,20 @@ with SQLAlchemy async patterns and Row Level Security.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
     Float,
     ForeignKey,
-    Integer,
     Numeric,
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -76,11 +74,17 @@ class Transaction(Base):
     external_reference = Column(String(100), unique=True, nullable=True)
 
     # Transaction parties
-    sender_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
-    receiver_agent_id = Column(String(36), ForeignKey("agents.id"), nullable=False)
+    sender_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
+    receiver_agent_id = Column(
+        String(36), ForeignKey("agents.id"), nullable=False
+    )
 
     # Related entities
-    negotiation_id = Column(String(36), ForeignKey("negotiations.id"), nullable=True)
+    negotiation_id = Column(
+        String(36), ForeignKey("negotiations.id"), nullable=True
+    )
     proposal_id = Column(String(36), ForeignKey("proposals.id"), nullable=True)
 
     # Transaction details
@@ -97,19 +101,25 @@ class Transaction(Base):
     net_amount = Column(Numeric(precision=15, scale=2), nullable=False)
 
     # Status and processing
-    status = Column(String(50), default=TransactionStatus.PENDING.value, nullable=False)
+    status = Column(
+        String(50), default=TransactionStatus.PENDING.value, nullable=False
+    )
     escrow_status = Column(String(50), default=EscrowStatus.CREATED.value)
 
     # Timing
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     processed_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
 
     # Security and validation
-    hash_signature = Column(String(256), nullable=True)  # Transaction integrity hash
-    validation_code = Column(String(50), nullable=True)  # Multi-factor validation
+    # Transaction integrity hash
+    hash_signature = Column(String(256), nullable=True)
+    # Multi-factor validation
+    validation_code = Column(String(50), nullable=True)
 
     # Dispute management
     dispute_reason = Column(Text, nullable=True)
@@ -128,7 +138,9 @@ class Transaction(Base):
 
     # Audit trail
     transaction_logs = relationship(
-        "TransactionLog", back_populates="transaction", cascade="all, delete-orphan"
+        "TransactionLog",
+        back_populates="transaction",
+        cascade="all, delete-orphan",
     )
 
 
@@ -140,7 +152,9 @@ class TransactionLog(Base):
     __tablename__ = "transaction_logs"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    transaction_id = Column(String(36), ForeignKey("transactions.id"), nullable=False)
+    transaction_id = Column(
+        String(36), ForeignKey("transactions.id"), nullable=False
+    )
 
     # Event details
     event_type = Column(String(50), nullable=False)
@@ -149,7 +163,8 @@ class TransactionLog(Base):
     new_status = Column(String(50), nullable=True)
 
     # Actor information
-    actor_type = Column(String(50), nullable=False)  # system, user, agent, external
+    # system, user, agent, external
+    actor_type = Column(String(50), nullable=False)
     actor_id = Column(String(36), nullable=True)
 
     # Event data
@@ -161,7 +176,9 @@ class TransactionLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    transaction = relationship("Transaction", back_populates="transaction_logs")
+    transaction = relationship(
+        "Transaction", back_populates="transaction_logs"
+    )
 
 
 class EscrowAccount(Base):
@@ -172,15 +189,20 @@ class EscrowAccount(Base):
     __tablename__ = "escrow_accounts"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    transaction_id = Column(String(36), ForeignKey("transactions.id"), nullable=False)
+    transaction_id = Column(
+        String(36), ForeignKey("transactions.id"), nullable=False
+    )
 
     # Escrow details
     amount_held = Column(Numeric(precision=15, scale=2), nullable=False)
     currency = Column(String(10), default="USD", nullable=False)
-    status = Column(String(50), default=EscrowStatus.CREATED.value, nullable=False)
+    status = Column(
+        String(50), default=EscrowStatus.CREATED.value, nullable=False
+    )
 
     # Release conditions
-    release_conditions = Column(Text, nullable=True)  # JSON serialized conditions
+    # JSON serialized conditions
+    release_conditions = Column(Text, nullable=True)
     auto_release_at = Column(DateTime, nullable=True)
     requires_approval = Column(Boolean, default=True)
 
@@ -229,3 +251,84 @@ class PaymentMethod(Base):
 
     # Relationships
     agent = relationship("Agent", foreign_keys=[agent_id])
+
+
+# Pydantic Models for API Schemas
+
+class TransactionCreate(BaseModel):
+    """Schema for creating new transactions."""
+    sender_agent_id: str = Field(..., min_length=1)
+    receiver_agent_id: str = Field(..., min_length=1)
+    negotiation_id: Optional[str] = None
+    proposal_id: Optional[str] = None
+    transaction_type: TransactionType = Field(default=TransactionType.NEGOTIATION_SETTLEMENT)
+    amount: float = Field(..., gt=0)
+    currency: str = Field(default="USD", max_length=10)
+    description: Optional[str] = None
+    meta_data: Optional[Dict[str, str]] = Field(default_factory=dict)
+
+
+class TransactionUpdate(BaseModel):
+    """Schema for updating transactions."""
+    status: Optional[TransactionStatus] = None
+    escrow_status: Optional[EscrowStatus] = None
+    dispute_reason: Optional[str] = None
+    dispute_resolution: Optional[str] = None
+
+
+class TransactionResponse(BaseModel):
+    """Schema for transaction responses."""
+    id: str
+    external_reference: Optional[str]
+    sender_agent_id: str
+    receiver_agent_id: str
+    negotiation_id: Optional[str]
+    proposal_id: Optional[str]
+    transaction_type: TransactionType
+    amount: float
+    currency: str
+    platform_fee_rate: float
+    platform_fee_amount: float
+    processing_fee_amount: float
+    net_amount: float
+    status: TransactionStatus
+    escrow_status: EscrowStatus
+    created_at: datetime
+    updated_at: datetime
+    processed_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    expires_at: Optional[datetime]
+    description: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentMethodCreate(BaseModel):
+    """Schema for creating payment methods."""
+    method_type: str = Field(..., min_length=1)
+    provider: Optional[str] = None
+    account_identifier: str = Field(..., min_length=1)
+    daily_limit: Optional[float] = Field(None, gt=0)
+    monthly_limit: Optional[float] = Field(None, gt=0)
+    minimum_amount: float = Field(default=0.01, gt=0)
+
+
+class PaymentMethodResponse(BaseModel):
+    """Schema for payment method responses."""
+    id: str
+    agent_id: str
+    method_type: str
+    provider: Optional[str]
+    account_identifier: str  # Note: This should be masked in actual implementation
+    is_verified: bool
+    is_active: bool
+    daily_limit: Optional[float]
+    monthly_limit: Optional[float]
+    minimum_amount: float
+    created_at: datetime
+    verified_at: Optional[datetime]
+    last_used_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True

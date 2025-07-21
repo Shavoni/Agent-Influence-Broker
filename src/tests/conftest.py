@@ -2,15 +2,19 @@
 Test configuration and fixtures
 """
 
-import pytest
 import asyncio
+
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool
 
+from src.app.core.database import Base, get_db_session
 from src.app.main import app
-from src.app.core.database import get_db_session, Base
-from src.app.core.config import settings
 
 # Test database URL (use in-memory SQLite for testing)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -20,7 +24,7 @@ test_engine = create_async_engine(
     TEST_DATABASE_URL,
     poolclass=StaticPool,
     connect_args={"check_same_thread": False},
-    echo=True
+    echo=True,
 )
 
 test_session_maker = async_sessionmaker(
@@ -41,10 +45,10 @@ async def db_session():
     """Create a test database session"""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     async with test_session_maker() as session:
         yield session
-    
+
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
@@ -52,14 +56,15 @@ async def db_session():
 @pytest.fixture
 async def client(db_session: AsyncSession):
     """Create a test client"""
+
     def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db_session] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 
@@ -69,5 +74,5 @@ def mock_user():
     return {
         "user_id": "test-user-123",
         "email": "test@example.com",
-        "role": "user"
+        "role": "user",
     }

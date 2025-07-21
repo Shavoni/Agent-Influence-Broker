@@ -3,7 +3,6 @@ In-Memory Data Store for Agent Influence Broker
 Real functionality without external dependencies
 """
 
-import json
 import threading
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -130,7 +129,9 @@ class Transaction:
         """Calculate savings if original amount is provided"""
         if self.original_amount and self.original_amount > self.amount:
             self.savings_amount = self.original_amount - self.amount
-            self.savings_percentage = (self.savings_amount / self.original_amount) * 100
+            self.savings_percentage = (
+                self.savings_amount / self.original_amount
+            ) * 100
 
     def to_dict(self):
         data = asdict(self)
@@ -252,7 +253,11 @@ class InMemoryDataStore:
             negotiation_type="data_exchange",
             status=NegotiationStatus.ACTIVE,
             initial_proposal={
-                "data_types": ["market_prices", "volume_data", "sentiment_scores"],
+                "data_types": [
+                    "market_prices",
+                    "volume_data",
+                    "sentiment_scores",
+                ],
                 "frequency": "real_time",
                 "cost_per_mb": 0.001,
                 "duration_months": 6,
@@ -350,7 +355,9 @@ class InMemoryDataStore:
             if owner_id:
                 agents = [a for a in agents if a.owner_id == owner_id]
             if agent_type:
-                agents = [a for a in agents if a.agent_type.value == agent_type]
+                agents = [
+                    a for a in agents if a.agent_type.value == agent_type
+                ]
             if is_active is not None:
                 agents = [a for a in agents if a.is_active == is_active]
 
@@ -360,7 +367,9 @@ class InMemoryDataStore:
             total = len(agents)
             return agents[offset : offset + limit], total
 
-    def update_agent(self, agent_id: str, updates: Dict[str, Any]) -> Optional[Agent]:
+    def update_agent(
+        self, agent_id: str, updates: Dict[str, Any]
+    ) -> Optional[Agent]:
         with self._lock:
             agent = self.agents.get(agent_id)
             if not agent:
@@ -383,7 +392,9 @@ class InMemoryDataStore:
             return False
 
     # Negotiation operations
-    def create_negotiation(self, negotiation_data: Dict[str, Any]) -> Negotiation:
+    def create_negotiation(
+        self, negotiation_data: Dict[str, Any]
+    ) -> Negotiation:
         with self._lock:
             negotiation_id = str(uuid.uuid4())
             negotiation = Negotiation(
@@ -397,7 +408,9 @@ class InMemoryDataStore:
                 max_rounds=negotiation_data.get("max_rounds", 10),
                 timeout_minutes=negotiation_data.get("timeout_minutes", 60),
                 expires_at=datetime.utcnow()
-                + timedelta(minutes=negotiation_data.get("timeout_minutes", 60)),
+                + timedelta(
+                    minutes=negotiation_data.get("timeout_minutes", 60)
+                ),
             )
             self.negotiations[negotiation_id] = negotiation
             return negotiation
@@ -424,7 +437,9 @@ class InMemoryDataStore:
                     or n.responder_agent_id == agent_id
                 ]
             if status:
-                negotiations = [n for n in negotiations if n.status.value == status]
+                negotiations = [
+                    n for n in negotiations if n.status.value == status
+                ]
 
             # Sort by creation time desc
             negotiations.sort(key=lambda x: x.created_at, reverse=True)
@@ -433,7 +448,9 @@ class InMemoryDataStore:
             return negotiations[offset : offset + limit], total
 
     # Transaction operations
-    def create_transaction(self, transaction_data: Dict[str, Any]) -> Transaction:
+    def create_transaction(
+        self, transaction_data: Dict[str, Any]
+    ) -> Transaction:
         with self._lock:
             transaction_id = str(uuid.uuid4())
             transaction = Transaction(
@@ -466,7 +483,8 @@ class InMemoryDataStore:
                 transactions = [
                     t
                     for t in transactions
-                    if t.payer_agent_id == agent_id or t.payee_agent_id == agent_id
+                    if t.payer_agent_id == agent_id
+                    or t.payee_agent_id == agent_id
                 ]
             if status:
                 transactions = [t for t in transactions if t.status == status]

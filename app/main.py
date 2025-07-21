@@ -11,17 +11,23 @@ import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.endpoints import agents, negotiations, transactions, external_agents
 from app.api.v1 import influence
+from app.api.v1.endpoints import (
+    agents,
+    external_agents,
+    negotiations,
+    transactions,
+)
+
 # TODO: Fix webhook imports when schemas are complete
 # from app.api.v1 import webhooks
 from app.core.config import get_cors_origins, get_settings
-from app.core.logging import get_logger, setup_logging
-from app.core.security import get_current_user_token, require_role
+from app.core.logging import get_logger
+from app.core.security import get_current_user_token
 
 # Initialize logging
 logger = get_logger(__name__)
@@ -179,8 +185,13 @@ def create_application() -> FastAPI:
                 "transaction_system": "✅ Active",
                 "webhook_notifications": "✅ Active",
                 "real_time_analytics": "✅ Active",
+                "transparency_dashboard": "✅ Active",
+                "audit_trail": "✅ Active",
+                "compliance_monitoring": "✅ Active",
             },
-            "api_documentation": "/docs" if settings.DEBUG else "Production mode",
+            "api_documentation": "/docs"
+            if settings.DEBUG
+            else "Production mode",
             "timestamp": time.time(),
         }
 
@@ -232,7 +243,7 @@ async def _get_active_negotiations_count() -> int:
         from app.services.negotiation_service import negotiation_engine
 
         return await negotiation_engine.get_active_count()
-    except:
+    except BaseException:
         return 0
 
 
@@ -241,7 +252,7 @@ async def _get_total_agents_count() -> int:
         from app.services.agent_service import agent_service
 
         return await agent_service.get_total_count()
-    except:
+    except BaseException:
         return 0
 
 
@@ -250,7 +261,7 @@ async def _get_pending_transactions_count() -> int:
         from app.services.transaction_service import transaction_engine
 
         return await transaction_engine.get_pending_count()
-    except:
+    except BaseException:
         return 0
 
 

@@ -134,8 +134,8 @@ async def premium_dashboard():
     <div class="test-card">
         <h1 class="title">🎉 GitKraken Dark Theme Test</h1>
         <p class="message">
-            If you can see this page with the dark theme and cyan accents, 
-            then the premium dashboard route is working! 
+            If you can see this page with the dark theme and cyan accents,
+            then the premium dashboard route is working!
             <br><br>
             Your Agent Influence Broker server is operational with GitKraken styling.
         </p>
@@ -182,7 +182,9 @@ async def get_savings_analytics():
         total_final_amount = sum(t.amount for t in transactions)
 
         # Calculate average savings percentage
-        savings_transactions = [t for t in transactions if t.savings_amount > 0]
+        savings_transactions = [
+            t for t in transactions if t.savings_amount > 0
+        ]
         avg_savings_percentage = (
             sum(t.savings_percentage for t in savings_transactions)
             / len(savings_transactions)
@@ -257,14 +259,18 @@ async def get_savings_analytics():
                     "original_amount": t.original_amount,
                     "final_amount": t.amount,
                     "completed_at": (
-                        t.completed_at.isoformat() + "Z" if t.completed_at else None
+                        t.completed_at.isoformat() + "Z"
+                        if t.completed_at
+                        else None
                     ),
                 }
                 for t in top_savings
             ],
             "live_ticker": {
                 "current_rate": f"{avg_savings_percentage:.1f}% average savings",
-                "trend": "increasing" if len(savings_transactions) > 2 else "stable",
+                "trend": "increasing"
+                if len(savings_transactions) > 2
+                else "stable",
                 "last_updated": datetime.utcnow().isoformat() + "Z",
             },
         }
@@ -333,7 +339,13 @@ async def create_agent(agent_data: Dict[str, Any]):
                 )
 
         # Validate agent_type
-        valid_types = ["trading", "negotiation", "influence", "service", "analytics"]
+        valid_types = [
+            "trading",
+            "negotiation",
+            "influence",
+            "service",
+            "analytics",
+        ]
         if agent_data["agent_type"] not in valid_types:
             raise HTTPException(
                 status_code=400,
@@ -411,24 +423,39 @@ async def create_negotiation(negotiation_data: Dict[str, Any]):
                 )
 
         # Validate that agents exist and are active
-        initiator = data_store.get_agent(negotiation_data["initiator_agent_id"])
-        responder = data_store.get_agent(negotiation_data["responder_agent_id"])
+        initiator = data_store.get_agent(
+            negotiation_data["initiator_agent_id"]
+        )
+        responder = data_store.get_agent(
+            negotiation_data["responder_agent_id"]
+        )
 
         if not initiator:
-            raise HTTPException(status_code=400, detail="Initiator agent not found")
+            raise HTTPException(
+                status_code=400, detail="Initiator agent not found"
+            )
         if not responder:
-            raise HTTPException(status_code=400, detail="Responder agent not found")
+            raise HTTPException(
+                status_code=400, detail="Responder agent not found"
+            )
         if not initiator.is_active:
-            raise HTTPException(status_code=400, detail="Initiator agent is not active")
+            raise HTTPException(
+                status_code=400, detail="Initiator agent is not active"
+            )
         if not responder.is_active:
-            raise HTTPException(status_code=400, detail="Responder agent is not active")
+            raise HTTPException(
+                status_code=400, detail="Responder agent is not active"
+            )
 
         negotiation = data_store.create_negotiation(negotiation_data)
 
         return {
             **negotiation.to_dict(),
             "message": "Negotiation created successfully",
-            "participants": {"initiator": initiator.name, "responder": responder.name},
+            "participants": {
+                "initiator": initiator.name,
+                "responder": responder.name,
+            },
         }
 
     except HTTPException:
@@ -494,20 +521,30 @@ async def create_transaction(transaction_data: Dict[str, Any]):
                     status_code=400, detail="Amount must be greater than 0"
                 )
         except (ValueError, TypeError):
-            raise HTTPException(status_code=400, detail="Amount must be a valid number")
+            raise HTTPException(
+                status_code=400, detail="Amount must be a valid number"
+            )
 
         # Validate that agents exist and are active
         payer = data_store.get_agent(transaction_data["payer_agent_id"])
         payee = data_store.get_agent(transaction_data["payee_agent_id"])
 
         if not payer:
-            raise HTTPException(status_code=400, detail="Payer agent not found")
+            raise HTTPException(
+                status_code=400, detail="Payer agent not found"
+            )
         if not payee:
-            raise HTTPException(status_code=400, detail="Payee agent not found")
+            raise HTTPException(
+                status_code=400, detail="Payee agent not found"
+            )
         if not payer.is_active:
-            raise HTTPException(status_code=400, detail="Payer agent is not active")
+            raise HTTPException(
+                status_code=400, detail="Payer agent is not active"
+            )
         if not payee.is_active:
-            raise HTTPException(status_code=400, detail="Payee agent is not active")
+            raise HTTPException(
+                status_code=400, detail="Payee agent is not active"
+            )
 
         transaction = data_store.create_transaction(transaction_data)
 
@@ -572,7 +609,9 @@ class AgentBrokerHTTPHandler(BaseHTTPRequestHandler):
             ) and response.content.strip().startswith("<!DOCTYPE html>"):
                 self.send_header("Content-Type", "text/html; charset=utf-8")
             else:
-                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header(
+                    "Content-Type", "application/json; charset=utf-8"
+                )
 
             self._set_cors_headers()
             self.end_headers()
@@ -594,7 +633,9 @@ class AgentBrokerHTTPHandler(BaseHTTPRequestHandler):
         self.send_header(
             "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
         )
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header(
+            "Access-Control-Allow-Headers", "Content-Type, Authorization"
+        )
 
     def _send_error(self, status: int, message: str):
         self.send_response(status)
@@ -623,16 +664,26 @@ def run_app(host="0.0.0.0", port=8000):
     logger.info("💼 Production-Ready AI Agent Negotiation & Transaction System")
     logger.info(f"🌐 Server running on http://{host}:{port}")
     logger.info("📊 Enterprise data store initialized:")
-    logger.info(f"   • {len(data_store.agents)} AI agents with reputation scoring")
+    logger.info(
+        f"   • {len(data_store.agents)} AI agents with reputation scoring"
+    )
     logger.info(f"   • {len(data_store.negotiations)} active negotiations")
     logger.info(f"   • {len(data_store.transactions)} completed transactions")
     logger.info("🔗 Enterprise API Endpoints:")
     logger.info(f"   • GET  {host}:{port}/api/v1/agents - Agent management")
     logger.info(f"   • POST {host}:{port}/api/v1/agents - Agent registration")
-    logger.info(f"   • GET  {host}:{port}/api/v1/negotiations - Negotiation engine")
-    logger.info(f"   • POST {host}:{port}/api/v1/negotiations - Start negotiations")
-    logger.info(f"   • GET  {host}:{port}/api/v1/transactions - Transaction system")
-    logger.info(f"   • POST {host}:{port}/api/v1/transactions - Process transactions")
+    logger.info(
+        f"   • GET  {host}:{port}/api/v1/negotiations - Negotiation engine"
+    )
+    logger.info(
+        f"   • POST {host}:{port}/api/v1/negotiations - Start negotiations"
+    )
+    logger.info(
+        f"   • GET  {host}:{port}/api/v1/transactions - Transaction system"
+    )
+    logger.info(
+        f"   • POST {host}:{port}/api/v1/transactions - Process transactions"
+    )
     logger.info(f"   • GET  {host}:{port}/health - System health monitoring")
     logger.info("✅ All systems operational - Ready for enterprise workloads")
 

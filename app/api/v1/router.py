@@ -17,7 +17,9 @@ api_router.include_router(
     transactions.router, prefix="/transactions", tags=["transactions"]
 )
 
-api_router.include_router(influence.router, prefix="/influence", tags=["influence"])
+api_router.include_router(
+    influence.router, prefix="/influence", tags=["influence"]
+)
 
 
 @api_router.get("/status")

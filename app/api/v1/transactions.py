@@ -5,13 +5,16 @@ Comprehensive transaction management endpoints implementing secure value exchang
 escrow management, and audit trails following FastAPI best practices.
 """
 
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.core.logging import get_logger
 from app.core.security import get_current_user_token
-from app.schemas.transaction import TransactionCreateRequest, TransactionResponse
+from app.schemas.transaction import (
+    TransactionCreateRequest,
+    TransactionResponse,
+)
 from app.services.transaction_service import transaction_engine
 
 logger = get_logger(__name__)
@@ -20,7 +23,9 @@ router = APIRouter()
 
 
 @router.post(
-    "/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED
+    "/",
+    response_model=TransactionResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_transaction(
     transaction_data: TransactionCreateRequest,

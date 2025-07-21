@@ -6,16 +6,18 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
-from app.core.auth import (
-    User,
-    get_current_active_user,
-    get_mock_user,
-    verify_agent_ownership,
-)
+from app.core.auth import User, get_mock_user, verify_agent_ownership
 from app.core.config import get_settings
-from app.core.exceptions import BusinessLogicError, NotFoundError, ValidationError
-from app.models.agent import Agent
-from app.schemas.agent import AgentCreateRequest, AgentUpdateRequest, AgentResponse
+from app.core.exceptions import (
+    BusinessLogicError,
+    NotFoundError,
+    ValidationError,
+)
+from app.schemas.agent import (
+    AgentCreateRequest,
+    AgentResponse,
+    AgentUpdateRequest,
+)
 from app.services.agent_service import AgentService
 
 logger = logging.getLogger(__name__)
@@ -45,7 +47,9 @@ async def get_current_user_dependency() -> User:
         )  # Replace with get_current_active_user for production
 
 
-@router.post("/", response_model=AgentResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=AgentResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_agent(
     agent_data: AgentCreateRequest,
     agent_service: AgentService = Depends(get_agent_service),
@@ -66,9 +70,13 @@ async def create_agent(
         HTTPException: If creation fails due to validation or business logic errors
     """
     try:
-        logger.info(f"Creating agent for user {current_user.id}: {agent_data.name}")
+        logger.info(
+            f"Creating agent for user {current_user.id}: {agent_data.name}"
+        )
 
-        created_agent = await agent_service.create_agent(agent_data, current_user.id)
+        created_agent = await agent_service.create_agent(
+            agent_data, current_user.id
+        )
 
         logger.info(
             f"Agent created successfully: {created_agent.id} "
@@ -93,7 +101,9 @@ async def create_agent(
             detail={"error": "Business logic violation", "message": str(e)},
         )
     except Exception as e:
-        logger.error(f"Unexpected error creating agent for user {current_user.id}: {e}")
+        logger.error(
+            f"Unexpected error creating agent for user {current_user.id}: {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
@@ -140,7 +150,9 @@ async def get_agent(
         return agent
 
     except NotFoundError as e:
-        logger.warning(f"Agent not found: {agent_id} for user {current_user.id}")
+        logger.warning(
+            f"Agent not found: {agent_id} for user {current_user.id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Not found", "message": str(e)},
@@ -157,7 +169,9 @@ async def get_agent(
 
 @router.get("/", response_model=List[AgentResponse])
 async def list_agents(
-    skip: int = Query(0, ge=0, description="Number of agents to skip for pagination"),
+    skip: int = Query(
+        0, ge=0, description="Number of agents to skip for pagination"
+    ),
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of agents to return"
     ),
@@ -190,14 +204,21 @@ async def list_agents(
         user_id_filter = current_user.id if owner_only else None
 
         agents = await agent_service.list_agents(
-            user_id=user_id_filter, skip=skip, limit=limit, status_filter=status
+            user_id=user_id_filter,
+            skip=skip,
+            limit=limit,
+            status_filter=status,
         )
 
-        logger.info(f"Returned {len(agents)} agents for user {current_user.id}")
+        logger.info(
+            f"Returned {len(agents)} agents for user {current_user.id}"
+        )
         return agents
 
     except Exception as e:
-        logger.error(f"Unexpected error listing agents for user {current_user.id}: {e}")
+        logger.error(
+            f"Unexpected error listing agents for user {current_user.id}: {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
@@ -243,7 +264,9 @@ async def update_agent(
             agent_id, update_data, current_user.id
         )
 
-        logger.info(f"Agent updated successfully: {agent_id} by user {current_user.id}")
+        logger.info(
+            f"Agent updated successfully: {agent_id} by user {current_user.id}"
+        )
         return updated_agent
 
     except NotFoundError as e:
@@ -295,7 +318,9 @@ async def delete_agent(
         HTTPException: If deletion fails or access denied
     """
     try:
-        logger.info(f"User {current_user.id} attempting to delete agent {agent_id}")
+        logger.info(
+            f"User {current_user.id} attempting to delete agent {agent_id}"
+        )
 
         # Verify ownership before attempting deletion
         if not verify_agent_ownership(agent_id, current_user):
@@ -368,7 +393,9 @@ async def get_agent_metrics(
         Agent metrics including reputation, negotiations, and influence scores
     """
     try:
-        logger.info(f"User {current_user.id} requesting metrics for agent {agent_id}")
+        logger.info(
+            f"User {current_user.id} requesting metrics for agent {agent_id}"
+        )
 
         # Verify access to agent
         agent = await agent_service.get_agent_by_id(agent_id, current_user.id)

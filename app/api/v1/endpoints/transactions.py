@@ -5,26 +5,23 @@ Implements comprehensive transaction workflows with escrow and validation.
 """
 
 import logging
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
 
-from app.core.auth import (
-    User,
-    get_current_active_user,
-    get_mock_user,
-    verify_agent_ownership,
-)
+from app.core.auth import User, get_mock_user, verify_agent_ownership
 from app.core.config import get_settings
-from app.core.exceptions import BusinessLogicError, NotFoundError, ValidationError
+from app.core.exceptions import (
+    BusinessLogicError,
+    NotFoundError,
+    ValidationError,
+)
 from app.models.transaction import (
     Transaction,
     TransactionCreate,
+    TransactionResponse,
     TransactionStatus,
     TransactionType,
-    TransactionUpdate,
 )
 from app.services.agent_service import AgentService
 from app.services.transaction_service import TransactionService
@@ -56,13 +53,15 @@ async def get_current_user_dependency() -> User:
         )  # Replace with get_current_active_user for production
 
 
-@router.post("/", response_model=Transaction, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_transaction(
     transaction_data: TransactionCreate,
     transaction_service: TransactionService = Depends(get_transaction_service),
     agent_service: AgentService = Depends(get_agent_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Transaction:
+) -> TransactionResponse:
     """
     Create a new transaction between agents.
 
@@ -96,7 +95,9 @@ async def create_transaction(
             transaction_data.from_agent_id, current_user.id
         )
 
-        if not verify_agent_ownership(transaction_data.from_agent_id, current_user):
+        if not verify_agent_ownership(
+            transaction_data.from_agent_id, current_user
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only create transactions from your own agents",
@@ -134,12 +135,12 @@ async def create_transaction(
         )
 
 
-@router.get("/{transaction_id}", response_model=Transaction)
+@router.get("/{transaction_id}", response_model=TransactionResponse)
 async def get_transaction(
     transaction_id: str,
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Transaction:
+) -> TransactionResponse:
     """
     Retrieve a transaction by ID with access control.
 
@@ -157,7 +158,9 @@ async def get_transaction(
         HTTPException: If transaction not found or access denied
     """
     try:
-        logger.info(f"User {current_user.id} requesting transaction {transaction_id}")
+        logger.info(
+            f"User {current_user.id} requesting transaction {transaction_id}"
+        )
 
         transaction = await transaction_service.get_transaction_by_id(
             transaction_id, current_user.id
@@ -174,14 +177,16 @@ async def get_transaction(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error retrieving transaction {transaction_id}: {e}")
+        logger.error(
+            f"Unexpected error retrieving transaction {transaction_id}: {e}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
         )
 
 
-@router.get("/", response_model=List[Transaction])
+@router.get("/", response_model=List[TransactionResponse])
 async def list_transactions(
     skip: int = Query(0, ge=0, description="Number of transactions to skip"),
     limit: int = Query(
@@ -193,7 +198,9 @@ async def list_transactions(
     transaction_type: Optional[TransactionType] = Query(
         None, description="Filter by type"
     ),
-    agent_id: Optional[str] = Query(None, description="Filter by agent participation"),
+    agent_id: Optional[str] = Query(
+        None, description="Filter by agent participation"
+    ),
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_user_dependency),
 ) -> List[Transaction]:
@@ -232,7 +239,9 @@ async def list_transactions(
             user_id=current_user.id,
             agent_id=agent_id,
             status_filter=status_filter.value if status_filter else None,
-            transaction_type=transaction_type.value if transaction_type else None,
+            transaction_type=transaction_type.value
+            if transaction_type
+            else None,
             skip=skip,
             limit=limit,
         )
@@ -252,13 +261,13 @@ async def list_transactions(
         )
 
 
-@router.patch("/{transaction_id}/status", response_model=Transaction)
+@router.patch("/{transaction_id}/status", response_model=TransactionResponse)
 async def update_transaction_status(
     transaction_id: str,
     new_status: TransactionStatus,
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_user_dependency),
-) -> Transaction:
+) -> TransactionResponse:
     """
     Update transaction status (approve, reject, complete).
 
@@ -282,8 +291,10 @@ async def update_transaction_status(
             f"status to {new_status.value}"
         )
 
-        updated_transaction = await transaction_service.update_transaction_status(
-            transaction_id, new_status.value, current_user.id
+        updated_transaction = (
+            await transaction_service.update_transaction_status(
+                transaction_id, new_status.value, current_user.id
+            )
         )
 
         logger.info(
@@ -292,7 +303,9 @@ async def update_transaction_status(
         return updated_transaction
 
     except NotFoundError as e:
-        logger.warning(f"Transaction not found for status update: {transaction_id}")
+        logger.warning(
+            f"Transaction not found for status update: {transaction_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Not found", "message": str(e)},
@@ -335,7 +348,9 @@ async def get_agent_balance(
         Agent balance and transaction statistics
     """
     try:
-        logger.info(f"User {current_user.id} requesting balance for agent {agent_id}")
+        logger.info(
+            f"User {current_user.id} requesting balance for agent {agent_id}"
+        )
 
         # Verify user owns the agent
         if not verify_agent_ownership(agent_id, current_user):
